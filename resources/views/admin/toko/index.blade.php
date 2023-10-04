@@ -1,0 +1,92 @@
+@extends('layouts.main', ['title' => 'Daftar Semua Toko'])
+<style>
+  thead tr th {
+    font-size: 0.9em;
+    white-space: nowrap;
+  }
+  tbody tr td {
+    font-size: 0.8em;
+  }
+</style>
+@section('content')
+<div id="content" class="py-4">
+  <div class="container-fluid">
+    <h1 style="font-size: 1.5em">Daftar Toko</h1>
+    <div class="card">
+      <div class="card-body">
+        <form action="">
+          <h5>Filter User</h5>
+          <div class="row">
+            <div class="col-md-4">
+              {{-- <label for="" class="form-label" style="font-size: 0.8em">Nama Produk</label> --}}
+              <input name="nama_toko" type="text" class="form-control form-control-sm" placeholder="Nama Toko">
+            </div>
+            <div class="col-md-4">
+              {{-- <label for="" class="form-label" style="font-size: 0.8em">Nama Produk</label> --}}
+              <select name="status" id="" class="form-control form-control-sm">
+                <option value="">-- Status --</option>
+                <option value="APPROVED">APPROVED</option>
+                <option value="PENDING">PENDING</option>
+                <option value="REJECT">REJECT</option>
+              </select>
+            </div>
+            <div class="col-md-12 mt-2 d-flex align-items-center" style="gap: 7px;">
+              <button class="btn btn-sm btn-primary px-4">Cari</button>
+              <a href="{{ route('admin.toko.index') }}" class="btn btn-sm btn-warning px-4">Refresh</a>
+            </div>
+          </div>
+        </form>
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Image</th>
+                <th>Nama Toko</th>
+                <th>Nama Pemilik</th>
+                <th>No Hape</th>
+                <th>Alamat</th>
+                <th>Status</th>
+                <th class="text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if($toko->count() > 0) 
+                @foreach($toko as $key => $value)
+                  <tr>
+                    <td>
+                      {{ $toko->firstItem() + $key }}
+                    </td>
+                    <td>
+                      <img src="{{ asset('toko/image') }}/{{ $value->nama_toko }}/{{ $value->image }}" alt="{{ $value->nama_toko }}">
+                    </td>
+                    <td>{{ $value->nama_toko }}</td>
+                    <td>{{ $value->user->full_name }}</td>
+                    <td>{{ $value->user->no_hape }}</td>
+                    <td>{{ $value->alamat_toko }}</td>
+                    <td>
+                      <span class="badge {{ $value->status_toko == 'APPROVED' ? 'badge-success' : ($value->status_toko == 'PENDING' ? 'badge-warning' : 'badge-danger') }} badge-sm">{{ $value->status_toko }}</span>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center" style="gap: 7px;">
+                        <a href="{{ route('admin.toko.view', $value->kode_toko) }}" class="btn btn-sm btn-primary text-nowrap" style="font-size: 0.8em"><i class="fa fa-eye"></i> Detail</a>
+                      </div>
+                    </td>
+                  </tr>
+                @endforeach
+              @else 
+                  <tr>
+                    <td colspan="11" align="center" class="p-4">Tidak Ada Data</td>
+                  </tr>
+              @endif
+            </tbody>
+            <tfoot>
+              {{ $toko->links() }}
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+@endsection
