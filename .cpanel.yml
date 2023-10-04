@@ -1,0 +1,5 @@
+---
+deployment:
+ tasks:
+ - export DEPLOYPATH=/home1/iorselco/laravel_api
+ - /usr/bin/rsync -Paz * $DEPLOYPATH --delete
