@@ -21,5 +21,9 @@ class TrxIorPay extends Model
     public function user() {
         return $this->belongsTo(User::class, 'uuid_user', 'uuid');
     }
+
+    public function order() {
+        
+    }
     
 }

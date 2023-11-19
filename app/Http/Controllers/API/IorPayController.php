@@ -6,7 +6,11 @@ use Midtrans\Snap;
 use Midtrans\Config;
 use App\Models\IorPay;
 use App\Models\TrxIorPay;
+use App\Models\Pendapatan;
 use Illuminate\Http\Request;
+use App\Models\TransaksiAccount;
+use App\Models\TrxWithdrawIorPay;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\API\Handle\ErrorController;
@@ -30,7 +34,7 @@ class IorPayController extends Controller
             'kode_pay' => $request['kode_pay']
         ])->first();
         
-        $saldo = $pay->saldo_formatted;
+        $saldo = number_format($pay->saldo, 0);
         return response()->json([
             'status' => true,
             'message' => 'Refresh Success',
@@ -40,7 +44,7 @@ class IorPayController extends Controller
 
     public function top_up(Request $request) {
         try {
-
+            DB::beginTransaction();
             $trx_pay = new TrxIorPay();
             $trx_pay->no_trx = 'TRX-'.rand(100000000, 999999999);
             $trx_pay->kode_pay = Auth::user()->iorPay->kode_pay;
@@ -55,6 +59,20 @@ class IorPayController extends Controller
                 $trx_pay->total_trx = (float) intval($request['total_topup']) + $kode_unique;
                 $kode_unique = substr($trx_pay->total_trx, -3);
                 $trx_pay->kode_unique = $kode_unique;
+
+                $param_trx_account = [
+                    'no_transaksi' => 'AC-'.rand(100000000, 999999999),
+                    'uuid_user' => Auth::user()->uuid,
+                    'type_payment' => $request['type_payment'],
+                    'method' => $request['method'],
+                    'jns_payment' => 'DEBIT',
+                    'biaya_trx' => $trx_pay->total_trx,
+                    'total' => $trx_pay->total_trx,
+                    'no_refrensi' => $trx_pay->no_trx,
+                    'keterangan' => 'Topup Saldo'
+                ];
+
+                TransaksiAccount::create($param_trx_account);
             }else if($request['type_payment'] == 'gateway') {
                 $items = array();
                 $trx_pay->total_trx = intval($request['total_topup']);
@@ -91,6 +109,7 @@ class IorPayController extends Controller
             $trx_pay->biaya_adm = 0;
             
             if($trx_pay->save()) {
+                DB::commit();
                 return response()->json([
                     'status' => true,
                     'error' => false,
@@ -98,6 +117,37 @@ class IorPayController extends Controller
                     'no_trx' => $trx_pay->no_trx
                 ], 200);
             }
+
+        }catch(\Exception $err) {
+            DB::rollBack();
+            return ErrorController::getResponseError($err);
+        }
+    }
+
+    public function getIorPay(Request $request) {
+        try {
+            $pay = IorPay::where([
+                'kode_pay' => $request['kode_pay'],
+                'uuid_user' => $request['uuid_user']
+            ])->first();
+            
+            $pay->total_saldo = number_format($pay->saldo, 0);
+            
+            if(empty($pay)) {
+                return response()->json([
+                    'status' => false,
+                    'error' => true,
+                    'message' => 'Sepertinya iorPay anda bermasalah, silahkan hubungi customer service untuk masalah ini.',
+                    'detail' => []
+                ], 402);
+            }
+
+            return response()->json([
+                'status' => true,
+                'error' => false,
+                'message' => 'Berhasil get iorPay',
+                'detail' => $pay
+            ], 200);
 
         }catch(\Exception $err) {
             return ErrorController::getResponseError($err);
@@ -128,6 +178,66 @@ class IorPayController extends Controller
                 'message' => 'Berhasil Get Transaksi Iorpay.',
                 'detail' => $trx
             ], 200);
+        }catch(\Exception $err) {
+            return ErrorController::getResponseError($err);
+        }
+    }
+
+    public function withdraw(Request $request) {
+        $request->validate([
+            'bank' => 'required|string',
+            'total_withdraw' => 'required|numeric|min:10000|max:'.floatval(Auth::user()->iorPay->saldo),
+            'norek' => 'required',
+            'nama_pemilik' => 'required|string'
+        ]);
+
+        try {
+
+            $pay = IorPay::where([
+                'uuid_user' => $request['uuid_user'],
+                'kode_pay' => $request['kode_pay']
+            ])->first();
+
+            if(empty($pay)) {
+                return response()->json([
+                    'status' => false,
+                    'error' => true,
+                    'message' => 'Sepertinya iorPay anda bermasalah, silahkan hubungi customer service untuk masalah ini.',
+                    'detail' => []
+                ], 402);
+            }
+
+            $no_trx_pay = 'TRX-'.rand(100000000, 999999999);
+            $trx_withdraw = new TrxWithdrawIorPay();
+            $trx_withdraw->no_trx = 'WD-'.rand(100000000, 999999999);
+            $trx_withdraw->kode_pay = $pay->kode_pay;
+            $trx_withdraw->total_withdraw = intval($request['total_withdraw']);
+            $trx_withdraw->nama_pemilik = $request['nama_pemilik'];
+            $trx_withdraw->norek_tujuan = $request['norek'];
+            $trx_withdraw->bank_tujuan = $request['bank'];
+            $trx_withdraw->keterangan = 'Transaksi Withdraw';
+            $trx_withdraw->no_trx_pay = $no_trx_pay;
+            $trx_withdraw->save();
+
+            $trx_pay = new TrxIorPay();
+            $trx_pay->no_trx = $no_trx_pay;
+            $trx_pay->kode_pay = $pay->kode_pay;
+            $trx_pay->uuid_user = Auth::user()->uuid;
+            $trx_pay->type_pay = 'CREDIT';
+            $trx_pay->jenis_pembayaran = $request['bank'];
+            $trx_pay->total_trx = $trx_withdraw->total_withdraw;
+            $trx_pay->total_fixed = $trx_withdraw->total_withdraw;
+            $trx_pay->keterangan = 'Penarikan Saldo';
+            $trx_pay->status_trx = 'PENDING';
+            $trx_pay->save();
+
+            return response()->json([
+                'status' => true,
+                'error' => false,
+                'message' => 'Transaksi Berhasil.',
+                'detail' => $trx_withdraw
+            ], 200);
+
         }catch(\Exception $err) {
             return ErrorController::getResponseError($err);
         }

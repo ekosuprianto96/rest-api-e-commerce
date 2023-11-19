@@ -42,8 +42,8 @@
                 <input type="text" class="form-control form-control-sm" readonly value="{{ $user->alamat }}">
               </div>
             </div>
-            <div class="col-md-12 d-flex align-items-center" style="gap: 7px;">
-              <a href="{{ route('admin.user.index') }}" class="btn btn-primary">Kembali</a>
+            <div class="col-md-12 px-0 d-flex align-items-center" style="gap: 7px;">
+              <a href="{{ isset($url_back) ? $url_back : route('admin.user.index') }}" class="btn btn-primary">Kembali</a>
               @if($user->status_user == 1)
                 <form class="m-0" action="{{ route('admin.user.batal-konfirmasi', $user->uuid) }}" method="POST">
                   @method('PUT')

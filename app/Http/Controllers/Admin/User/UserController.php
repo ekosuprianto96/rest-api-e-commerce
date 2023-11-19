@@ -99,9 +99,14 @@ class UserController extends Controller
         }
     }
 
-    public function view_user($uuid_user) {
+    public function view_user(Request $request, $uuid_user) {
         
         $user = User::findOrFail($uuid_user);
+        $url_back = null;
+
+        if($request->by_produk) {
+            $url_back = route('admin.produk.view-produk', $request->by_produk);
+        }
 
         if(!isset($user)) {
             Alert::warning('Tidak Ditemukan!', 'Maaf, User Tidak Ditemukan');
@@ -109,6 +114,6 @@ class UserController extends Controller
             return redirect()->back();
         }
 
-        return view('admin.user.view', compact('user'));
+        return view('admin.user.view', compact('user', 'url_back'));
     }
 }

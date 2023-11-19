@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\Settings\SettingController;
 use App\Models\IorPay;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -17,7 +18,9 @@ use App\Http\Controllers\API\KategoriController;
 use App\Http\Controllers\API\RegisterController;
 use App\Http\Controllers\API\WishListController;
 use App\Http\Controllers\API\AuthenticateController;
+use App\Http\Controllers\API\PesananController;
 use App\Http\Controllers\API\RegisterTokoController;
+use App\Models\DetailToko;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,18 +45,21 @@ Route::post('login', [AuthenticateController::class, 'authenticate']);
 Route::post('register', [RegisterController::class, 'store']);
 
 Route::post('produk/show', [ProdukController::class, 'show'])->name('show');
+Route::get('produk-toko/{kode_toko}', [ProdukController::class, 'produk_toko'])->name('produk-toko');
+Route::get('produk-serupa/{kategori}', [ProdukController::class, 'produk_serupa'])->name('produk-serupa');
 Route::get('kategori/show', [KategoriController::class, 'show'])->name('show');
+Route::get('settings', [SettingController::class, 'get_settings'])->name('settings');
 
 Route::middleware('auth:api')->get('authenticate', function (Request $request) {
     $iorpay = IorPay::where('uuid_user', auth()->guard('api')->user()->uuid)->first();
-    $iorpay->saldo = $iorpay->saldo_formatted;
+    $iorpay->saldo = number_format($iorpay->saldo, 0);
     return response()->json([
         'status' => true,
         'error' => false,
         'user' => $request->user(),
-        'toko' => auth()->guard('api')->user()->toko,
         'wishlist' => auth()->guard('api')->user()->wishlist,
         'carts' => auth()->guard('api')->user()->cart,
+        'toko' => auth()->guard('api')->user()->toko,
         'iorpay' => $iorpay,
         'meesage' => 'Get data success fully.'
     ]);
@@ -74,17 +80,24 @@ Route::prefix('user/')->name('user.')->middleware('auth:api')->group(function() 
     Route::post('logout', [AuthenticateController::class, 'logout'])->name('logout');
     Route::post('update', [AuthenticateController::class, 'update'])->name('update');
     Route::post('upload-image', [AuthenticateController::class, 'upload_image'])->name('upload-image');
+    Route::get('komisi', [AuthenticateController::class, 'komisi'])->name('komisi');
+    Route::get('notifikasi', [AuthenticateController::class, 'notifikasi'])->name('notifikasi');
     // Chat
     Route::prefix('chat/')->name('chat.')->group(function() {
-        Route::get('', [MessageController::class, 'index'])->name('index');
+        Route::post('', [MessageController::class, 'index'])->name('index');
         Route::post('store', [MessageController::class, 'store'])->name('store');
     });
+
+    // Message
+    Route::post('open-message', [MessageController::class, 'open'])->name('open-message');
 
     // Iorpay
     Route::prefix('iorpay/')->name('iorpay.')->group(function() {
         Route::post('get-trx', [IorPayController::class, 'get_trx'])->name('get-trx');
         Route::post('top-up', [IorPayController::class, 'top_up'])->name('top-up');
         Route::post('refresh', [IorPayController::class, 'refresh'])->name('refresh');
+        Route::post('get-pay', [IorPayController::class, 'getIorPay'])->name('get-pay');
+        Route::post('withdraw', [IorPayController::class, 'withdraw'])->name('withdraw');
     });
 
     Route::prefix('cart/')->name('cart.')->group(function() {
@@ -108,16 +121,31 @@ Route::prefix('user/')->name('user.')->middleware('auth:api')->group(function() 
         Route::post('checkout', [OrderController::class, 'checkout'])->name('checkout');
         Route::post('cancel', [OrderController::class, 'cancel'])->name('cancel');
         Route::post('store', [OrderController::class, 'store'])->name('store');
+        Route::get('pesanan/{uuid_user}', [PesananController::class, 'pesanan'])->name('pesanan');
+        Route::post('detail-pesanan', [PesananController::class, 'detail_pesanan'])->name('detail-pesanan');
     });
 
     Route::prefix('toko/')->name('toko.')->group(function() {
         Route::get('detail', [DetailTokoController::class, 'detail'])->name('detail');
+        Route::get('notifikasi', [DetailTokoController::class, 'notifikasi'])->name('notifikasi');
+        Route::post('produk', [DetailTokoController::class, 'produk'])->name('produk');
+        Route::post('produk/destroy', [DetailTokoController::class, 'destroy_produk'])->name('destroy-produk');
+        Route::post('produk/edit', [DetailTokoController::class, 'edit'])->name('edit-produk');
+        Route::post('produk/update', [DetailTokoController::class, 'produk_update'])->name('update-produk');
         Route::get('order/{kode_toko}', [DetailTokoController::class, 'order'])->name('order');
         Route::post('update', [DetailTokoController::class, 'update'])->name('update');
         Route::post('upload-image', [DetailTokoController::class, 'upload_image'])->name('upload-image');
         Route::post('checkout', [DetailTokoController::class, 'checkout'])->name('checkout');
         Route::post('destroy', [DetailTokoController::class, 'destroy'])->name('destroy');
         Route::post('store', [DetailTokoController::class, 'store'])->name('store');
+        Route::get('message', [DetailTokoController::class, 'message'])->name('message');
+        Route::post('detail-order', [DetailTokoController::class, 'detail_order'])->name('detail-order');
+        Route::post('proses-order', [DetailTokoController::class, 'prosesOrder'])->name('proses-order');
+        Route::post('message-toko', [MessageController::class, 'message_toko'])->name('message-toko');
+        Route::post('store-toko', [MessageController::class, 'store_toko'])->name('store-toko');
+        Route::post('open-message-toko', [MessageController::class, 'open_message_toko'])->name('open-message-toko');
+        Route::post('order/upload-file', [DetailTokoController::class, 'upload_file'])->name('upload-file');
+        Route::post('profile', [DetailTokoController::class, 'profile'])->name('profile');
     });
 
     // Route Form

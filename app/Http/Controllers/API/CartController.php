@@ -27,7 +27,7 @@ class CartController extends Controller
                     'kode_produk' => $c->kode_produk,
                     'an' => 1
                 ])->first();
-                $c->harga = $produk->getHargaDiskon($produk);
+                $c->harga = $produk->getHargaDiskon();
                 $wishlist = Wishlist::where([
                     'kode_produk' => $c->kode_produk,
                     'uuid_user' => auth()->guard('api')->user()->uuid

@@ -53,7 +53,7 @@
         {{-- End Menu Sidebar --}}
 
         <div id="content-wrapper" class="d-flex flex-column">
-
+            <x-navbar></x-navbar>
           @yield('content')
 
             <x-admin.footer></x-admin.footer>

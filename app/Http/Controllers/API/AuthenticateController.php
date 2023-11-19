@@ -2,22 +2,48 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\API\Handle\ErrorController;
 use App\Models\User;
+use App\Models\TrxIorPay;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Jobs\SendInvoiceToko;
 use App\Jobs\SendNotificationEmail;
 use App\Jobs\SendNotificationLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
+use App\Models\TransaksiKomisiReferal;
 use App\Notifications\LoginNotification;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\RegisterNotification;
-use Illuminate\Support\Facades\File;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
+use App\Http\Controllers\API\Handle\ErrorController;
 
 class AuthenticateController extends Controller
 {
+
+    public function notifikasi(Request $request) {
+        try {
+            $notifikasi = Notification::where([
+                'to' => $request['uuid_user'],
+                'status_read' => 0
+            ])->get();
+            
+            $detail['pesan'] = count(collect($notifikasi)->where('type', 'pesan'));
+            $detail['order'] = count(collect($notifikasi)->where('type', 'order'));
+            
+            return response()->json(
+                [
+                    'status' => true,
+                    'error' => false,
+                    'message' => 'Berhasil get notifikasi',
+                    'detail' => $detail
+                ]
+                );
+        }catch(\Exception $err) {
+            return ErrorController::getResponseError($err);
+        }
+    }
     public function authenticate(Request $request) {
         $validator = $request->validate([
                             'email' => 'required|email|min:6|max:32',
@@ -149,6 +175,32 @@ class AuthenticateController extends Controller
                     'image' => $image
                 ], 200);
             }
+        }catch(\Exception $err) {
+            return ErrorController::getResponseError($err);
+        }
+    }
+
+    public function komisi() {
+        try {
+
+            $trx_pay = TransaksiKomisiReferal::with(['trx_iorpay', 'produk'])->where([
+                'kode_pay' => Auth::user()->iorPay->kode_pay,
+           ])->get();
+
+           foreach($trx_pay as $trx) {
+            $trx->nama_toko = $trx->produk->toko->nama_toko;
+            $trx->produk->detail_harga = $trx->produk->getHargaDiskon();
+            $trx->trx_iorpay->total_fixed = number_format($trx->trx_iorpay->total_fixed, 0);
+            $trx->tanggal = $trx->created_at->format('d/m/Y');
+            // $trx->
+           }
+            return response()->json([
+                'status' => true,
+                'error' => false,
+                'message' => 'Berhasil get komisi',
+                'detail' => $trx_pay
+            ], 200);
+
         }catch(\Exception $err) {
             return ErrorController::getResponseError($err);
         }

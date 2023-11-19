@@ -15,67 +15,79 @@
     <div class="card">
       <div class="card-body">
         <div class="table-responsive">
-          <table class="table table-striped">
+          <table class="table table-striped" id="table">
             <thead>
               <tr>
                 <th>#</th>
-                <th>Image</th>
-                <th>Kode Produk</th>
+                <th>No Order</th>
                 <th>Nama Produk</th>
                 <th>Type Produk</th>
                 <th>Kategori</th>
-                <th>Harga</th>
-                <th>Penjual</th>
-                <th>Terjual</th>
+                <th>Nama Pembeli</th>
+                <th>Biaya</th>
                 <th>Status</th>
+                <th>Tanggal</th>
                 <th class="text-center">Action</th>
               </tr>
             </thead>
             <tbody>
-              @if($produk->count() > 0) 
-                @foreach($produk as $key => $value)
-                  <tr>
-                    <td>
-                      {{ $produk->firstItem() + $key }}
-                    </td>
-                    <td>
-                      <img src="{{ asset('produk/image') }}/{{ $value->toko->nama_toko }}/{{ $value->image }}" alt="{{ $value->nm_produk }}">
-                    </td>
-                    <td>{{ $value->kode_produk }}</td>
-                    <td>{{ $value->nm_produk }}</td>
-                    <td>{{ $value->type_produk }}</td>
-                    <td>{{ $value->kategori->nama_kategori }}</td>
-                    <td>{{ $value->harga }}</td>
-                    <td>{{ $value->toko->nama_toko }}</td>
-                    <td>0</td>
-                    <td>
-                      <span class="badge {{ $value->status_confirm == 0 ? 'badge-warning' : 'badge-succes' }} badge-sm">{{ $value->status_confirm == 0 ? 'Belum Di Konfirmasi' : 'Konfirmasi' }}</span>
-                    </td>
-                    <td>
-                      <div class="d-flex align-items-center" style="gap: 7px;">
-                        <a href="" class="btn btn-sm btn-primary text-nowrap" style="font-size: 0.8em"><i class="fa fa-eye"></i> View</a>
-                        <form class="m-0" action="{{ route('admin.produk.konfirmasi', $value->kode_produk) }}" method="POST">
-                          @method('PUT')
-                          @csrf
-                          <button type="submit" class="btn btn-sm btn-success text-nowrap" style="font-size: 0.8em"><i class="ri-checkbox-circle-fill"></i> Konfirmasi</button>
-                        </form>
-                      </div>
-                    </td>
-                  </tr>
-                @endforeach
-              @else 
-                  <tr>
-                    <td colspan="11" align="center" class="p-4">Tidak Ada Data</td>
-                  </tr>
-              @endif
+              
             </tbody>
-            <tfoot>
-              {{ $produk->links() }}
-            </tfoot>
           </table>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  $(function() {
+    table = $('#table').DataTable({
+      processing: true,
+      serverSide: true,
+      paginate: true,
+      ajax: {
+        url: '{{ route("admin.order.data-order") }}',
+        data: function(d) {
+          d._token = '{{ csrf_token() }}';
+        }
+      },
+      columns: [
+        { data: '#', 
+            render: function(data, type, row, meta) {
+              return meta.row + meta.settings._iDisplayStart + 1;
+        }},
+        { data: 'no_order', search: true, name: 'no_order'},
+        { data: 'nama_produk', search: true, name: 'nama_produk'},
+        { data: 'type_produk', search: true, name: 'type_produk'},
+        { data: 'kategori', search: true, name: 'kategori'},
+        { data: 'nama_pembeli', search: true, name: 'nama_pembeli'},
+        { data: 'biaya', search: true, name: 'biaya'},
+        { data: 'status', search: true, name: 'status'},
+        { data: 'tanggal', search: true, name: 'tanggal'},
+        { data: 'action', name: 'action'},
+      ]
+    });
+
+    $('#no_order').keyup(function(event) {
+      table.ajax.reload();
+    });
+    $('#type_pembayaran').change(function(event) {
+      table.ajax.reload();
+    });
+    $('#bank').change(function(event) {
+      table.ajax.reload();
+    });
+    $('#status_order').change(function(event) {
+      table.ajax.reload();
+    });
+    $('#tanggal_mulai').change(function(event) {
+      table.ajax.reload();
+    });
+    $('#tanggal_akhir').change(function(event) {
+      table.ajax.reload();
+    });
+  })
+
+</script>
 @endsection

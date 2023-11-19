@@ -14,11 +14,12 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\InteractsWithBroadcasting;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Support\Facades\Log;
 
 class LiveChat implements ShouldBroadcast
 {
-    // use Dispatchable, InteractsWithSockets, SerializesModels;
-    use InteractsWithBroadcasting, Dispatchable;
+    use Dispatchable, InteractsWithSockets, SerializesModels;
+    // use InteractsWithBroadcasting, Dispatchable;
 
     /**
      * Create a new event instance.
@@ -30,7 +31,7 @@ class LiveChat implements ShouldBroadcast
     // public $kode_toko;
     public function __construct($message)
     {
-        $this->broadcastVia('pusher');
+        // $this->broadcastVia('pusher');
         $this->message = $message;
         // $this->kode_toko = $kode_toko;
         // $this->user = $user;
@@ -44,11 +45,14 @@ class LiveChat implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        // Storage::move()
-        return new Channel('message');
+        return ['message'];
     }
     public function broadcastAs()
     {
-        return 'live-chat';
+        if($this->message['is_user']) {
+            return 'live-chat-'.$this->message['kode_toko'];
+        }else {
+            return 'live-chat-'.$this->message['uuid_user'];
+        };
     }
 }

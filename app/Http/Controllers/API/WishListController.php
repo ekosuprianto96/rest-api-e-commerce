@@ -24,10 +24,9 @@ class WishListController extends Controller
                         ->get();
             foreach($wishlist as $c) {
                 $produk = Produk::with(['kategori', 'toko'])->where([
-                    'kode_produk' => $c->kode_produk,
-                    'an' => 1
+                    'kode_produk' => $c->kode_produk
                 ])->first();
-                $c->harga = $produk->getHargaDiskon($produk);
+                $c->harga = $produk->getHargaDiskon();
                 $c->form = $produk->form;
             }
             return response()->json([

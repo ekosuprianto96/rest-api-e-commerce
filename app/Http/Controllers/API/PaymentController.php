@@ -18,16 +18,16 @@ use App\Models\ClearingSaldo;
 use App\Models\PaymentMethod;
 use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
+use App\Models\TransaksiKomisiReferal;
 use RealRashid\SweetAlert\Facades\Alert;
+use Yajra\DataTables\Facades\DataTables;
 use App\Http\Controllers\API\Handle\ErrorController;
+use App\Models\Pendapatan;
 
 class PaymentController extends Controller
 {
     public function index() {
-
-        $order = Order::latest()->whereRaw("status_order = '0' and type_payment = 'manual'")->paginate(50);
-        
-        return view('admin.payment.index', compact('order'));
+        return view('admin.payment.index');
     }
 
     public function detail($no_order) {
@@ -37,22 +37,36 @@ class PaymentController extends Controller
 
     }
 
-    public function konfirmasi(Request $request, $no_order) {
+    public function konfirmasi(Request $request) {
         try {
 
             $order = Order::where([
                     'type_payment' => 'manual',
                     'status_order' => 0,
-                    'no_order' => $no_order
+                    'no_order' => $request['no_order']
                 ])->first();
 
             if($order->status_order == 'SUCCESS') {
-                Alert::success('Perhatian!', 'Order Sudah Dikonfirmasi');
-                return redirect()->back();
+                return response()->json([
+                    'status' => false,
+                    'error' => true,
+                    'message' => 'Mohon Maaf, Pembayaran Sudah Di Konfirmasi.',
+                    'detail' => $order
+                ]);
             }
-
+            
             $daftar_order_toko = array();
             $order->status_order = 'SUCCESS';
+
+            $pendapatan = Pendapatan::where('no_refrensi', $order->no_order)->get();
+
+            if(isset($pendapatan)) {
+                foreach($pendapatan as $pd) {
+                    $pd->status = $order->status_order;
+                    $pd->save();
+                }
+            }
+
             foreach($order->detail as $detail) {
                 $produk = Produk::where('kode_produk', $detail->kode_produk)->first();
                 $harga = $produk->getHargaDiskon($produk);
@@ -66,7 +80,9 @@ class PaymentController extends Controller
                     if($produk->status_referal) {
 
                         $pay_referal = IorPay::where('uuid_user', $detail->kode_referal)->first();
-                        $pay_referal->saldo += $produk->komisi_referal;
+                        $komisi = (float) ($produk->komisi_referal / 100);
+                        $komisi = (float) ($produk->harga * $komisi);
+                        $pay_referal->saldo += $komisi;
                         $pay_referal->save();
 
                         $trx_pay = new TrxIorPay();
@@ -75,14 +91,21 @@ class PaymentController extends Controller
                         $trx_pay->uuid_user = $pay_referal->user->uuid;
                         $trx_pay->type_pay = 'DEBIT';
                         $trx_pay->jenis_pembayaran = 'REFERAL';
-                        $trx_pay->total_trx = $produk->komisi_referal;
-                        $trx_pay->total_fixed = $produk->komisi_referal;
+                        $trx_pay->total_trx = $komisi;
+                        $trx_pay->total_fixed = $komisi;
                         $trx_pay->keterangan = 'Komisi Referal';
                         $trx_pay->status_trx = 'SUCCESS';
                         $trx_pay->save();
+
+                        $trx_komisi = new TransaksiKomisiReferal();
+                        $trx_komisi->no_trx = $trx_pay->no_trx;
+                        $trx_komisi->kode_produk = $produk->kode_produk;
+                        $trx_komisi->kode_pay = $pay_referal->kode_pay;
+                        $trx_komisi->total_komisi = $komisi;
+                        $trx_komisi->save();
                     }
                 }
-
+                
                 if($produk->type_produk == 'AUTO') {
                     $token = Str::uuid(32);
                     
@@ -106,11 +129,10 @@ class PaymentController extends Controller
                                     'no_order' => $order->no_order,
                                     'kode_toko' => $produk->kode_toko
                                 ])->get();
-               
+                    
                 array_push($daftar_order_toko, $produk->kode_toko);
                 error_log("Pendapatan Tok : $pendapatan_toko");
                 SaldoRefaund::addSaldo($produk->kode_toko, $pendapatan_toko);
-
                 ClearingSaldo::create([
                     'kode_toko' => $produk->kode_toko,
                     'saldo' => $pendapatan_toko,
@@ -128,9 +150,13 @@ class PaymentController extends Controller
                     'no_order' => $order->no_order,
                     'kode_toko' => $toko
                 ])->get();
-
+                
                 $total_pembayaran_pertoko = 0;
                 foreach($get_order_toko as $ot) {
+                    if($ot->type_produk == 'AUTO') {
+                        $ot->status_order = 'SUCCES';
+                        $ot->save();
+                    }
                     $produk_toko = Produk::where('kode_produk', $ot->kode_produk)->first();
                     $harga_produk = $produk_toko->getHargaDiskon($produk_toko);
                     $harga_fixed = (float)str_replace(',', '', $harga_produk['harga_fixed']);
@@ -145,14 +171,17 @@ class PaymentController extends Controller
                 $user_toko = User::where('uuid', $daftar_toko->user->uuid)->first();
                 SendInvoiceToko::dispatch($user_toko, $get_order_toko);
             }
-
+            
             $order->save();
 
-            Alert::success('Sukses!', 'Berhasil Konfirmasi Pembayaran');
-
-            return redirect()->back();
+            return response()->json([
+                'status' => true,
+                'error' => false,
+                'message' => "Berhasil Konfirmasi Pembayaran, \nNo Order: $order->no_order",
+                'detail' => $order
+            ]);
         }catch(\Exception $err) {
-            return ErrorController::getError($err);
+            return ErrorController::getResponseError($err);
         }
     }
 
@@ -165,5 +194,48 @@ class PaymentController extends Controller
             'message' => 'Berhasil get payment',
             'detail' => $payment
         ], 200);
+    }
+
+    public function konfirmasi_data(Request $request) {
+        try {
+            $order = Order::latest()->whereRaw("status_order = '0' and type_payment = 'manual'")->get();
+
+            $data = DataTables::of($order)
+                        ->addColumn('no_order', function($list) {
+                            return $list->no_order;
+                        })
+                        ->addColumn('customer', function($list) {
+                            return $list->user->full_name;
+                        })
+                        ->addColumn('total_produk', function($list) {
+                            return $list->detail->count();
+                        })
+                        ->addColumn('total_biaya', function($list) {
+                            return 'Rp. '.number_format($list->total_biaya, 0);
+                        })
+                        ->addColumn('total_potongan', function($list) {
+                            return 'Rp. '.number_format($list->total_potongan, 0);
+                        })
+                        ->addColumn('kode_unique', function($list) {
+                            return (isset($list->kode_unique) ? $list->kode_unique : '-');
+                        })
+                        ->addColumn('action', function($list) {
+                            return '<div class="d-flex align-items-center justify-content-center" style="gap: 7px;">
+                                        <a href="'.route('admin.payment.detail', $list->no_order).'" class="btn btn-sm btn-primary text-nowrap" style="font-size: 0.8em"><i class="fa fa-eye"></i> Detail</a>
+                                        <a href="javascript:void(0)" onclick="konfirmasi_payment('."'".$list->no_order."'".')" class="btn btn-sm btn-success text-nowrap" style="font-size: 0.8em"><i class="fa fa-eye"></i> Konfirmasi</a>
+                                    </div>';
+                        })
+                        ->rawColumns(['no_order', 'customer', 'total_produk', 'total_biaya', 'total_potongan', 'kode_unique', 'action'])
+                        ->make(true);
+
+            return $data;
+        }catch(\Exception $err) {
+            return response()->json([
+                'status' => false,
+                'error' => true,
+                'message' => $err->getMessage(),
+                'details' => 'Line :'.$err->getLine() 
+            ], 500);
+        }
     }
 }

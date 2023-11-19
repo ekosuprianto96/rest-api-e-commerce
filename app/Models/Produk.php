@@ -38,24 +38,37 @@ class Produk extends Model
         return $this->belongsTo(Kategori::class, 'kode_kategori', 'kode_kategori');
     }
 
-    public function getHargaDiskon(Produk $produk) {
-        if($produk->potongan_harga > 0) {
-            $potongan = (float) ($produk->harga - $produk->potongan_harga);
-            $produk->harga_fixed = number_format($potongan, 0);
-            $produk['potongan'] = number_format($produk->potongan_harga, 0);
+    public function getHargaFixed() {
+        if($this->potongan_persen > 0) {
+            $persen = (float) $this->potongan_persen / 100;
+            $harga_fixed = (float) ($this->harga * $persen);
+            $harga_fixed = (float) ($this->harga - $harga_fixed);
+        }else if($this->potongan_harga > 0) {
+            $harga_fixed = (float) ($this->harga - $this->potongan_harga);
+        }else {
+            $harga_fixed = $this->harga;
         }
 
-        if($produk->potongan_persen > 0) {
-            $potongan = (float) $produk->harga * ($produk->potongan_persen  / 100);
-            $produk->harga_fixed = (float) $produk->harga - $potongan;
-            $produk['potongan'] = number_format($potongan, 0);
-            $produk->harga_fixed = number_format($produk->harga_fixed, 0);
+        return $harga_fixed;
+    }
+    public function getHargaDiskon() {
+        if($this->potongan_harga > 0) {
+            $potongan = (float) ($this->harga - $this->potongan_harga);
+            $this->harga_fixed = number_format($potongan, 0);
+            $this['potongan'] = number_format($this->potongan_harga, 0);
+        }
+
+        if($this->potongan_persen > 0) {
+            $potongan = (float) $this->harga * ($this->potongan_persen  / 100);
+            $this->harga_fixed = (float) $this->harga - $potongan;
+            $this['potongan'] = number_format($potongan, 0);
+            $this->harga_fixed = number_format($this->harga_fixed, 0);
         }
 
         return array(
-            'harga_real' => number_format($produk->harga, 0),
-            'harga_fixed' => ($produk->harga_fixed > 0 ? $produk->harga_fixed : number_format($produk->harga, 0)),
-            'harga_diskon' => ($produk['potongan'] > 0 ? $produk['potongan'] : 0));
+            'harga_real' => number_format($this->harga, 0),
+            'harga_fixed' => ($this->harga_fixed > 0 ? $this->harga_fixed : number_format($this->harga, 0)),
+            'harga_diskon' => ($this['potongan'] > 0 ? $this['potongan'] : 0));
     }
 
     public function form() {

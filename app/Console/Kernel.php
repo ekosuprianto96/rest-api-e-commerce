@@ -17,7 +17,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->job(new ProsesClearingSaldoToko)->everyMinute();
+        // $schedule->job(new ProsesClearingSaldoToko)->everyMinute();
         $schedule->command('que:work')->everyMinute();
         Log::info('Cronjob berhasil dijalankan');
     }

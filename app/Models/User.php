@@ -94,4 +94,7 @@ class User extends Authenticatable implements JWTSubject
     public function iorPay() {
         return $this->hasOne(IorPay::class, 'uuid_user', 'uuid');
     }
+    public function trx_account() {
+        return $this->hasMany(TransaksiAccount::class, 'uuid_user', 'uuid');
+    }
 }
