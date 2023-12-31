@@ -1,4 +1,4 @@
-@extends('layouts.main', ['title' => 'Daftar Semua Transaksi'])
+@extends('layouts.main', ['title' => 'Daftar Transaksi'])
 <style>
   thead tr th {
     font-size: 0.9em;

@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -16,9 +17,12 @@ class RegisterNotification extends Notification
      *
      * @return void
      */
-    public function __construct()
+    public $data;
+    public $user;
+    public function __construct(User $user, $data)
     {
-        //
+        $this->user = $user;
+        $this->data = $data;
     }
 
     /**
@@ -41,10 +45,9 @@ class RegisterNotification extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-                ->subject('Selamat Datang di Iorsel')
-                ->line('Halo, ' . $notifiable->name . '!')
+                ->line('Halo, ' . $this->data['nama'] . '!')
                 ->line('Senang dengan kamu yang sudah mendaftar dari bagian kami.')
-                ->action('Konfirmasi Akun', 'http://localhos:8080')
+                ->action('Konfirmasi Akun', env('URL_WEBSITE').'/'.'konfirmasi-email?key='.$this->data['key'])
                 ->line('Jika Anda memiliki pertanyaan, jangan ragu untuk menghubungi kami.');
     }
 

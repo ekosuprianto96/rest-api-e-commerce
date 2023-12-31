@@ -4,14 +4,17 @@ namespace App\Http\Controllers\API;
 
 use App\Models\Produk;
 use App\Models\DetailOrder;
+use App\Models\SaldoRefaund;
 use Illuminate\Http\Request;
+use App\Models\AksesDownload;
+use App\Models\ClearingSaldo;
 use App\Models\SettingWebsite;
+use Illuminate\Support\Carbon;
+use App\Models\WaktuProsesOrder;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\API\Handle\ErrorController;
-use App\Models\AksesDownload;
-use App\Models\WaktuProsesOrder;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\API\Handle\ErrorController;
 
 class PesananController extends Controller
 {
@@ -22,7 +25,7 @@ class PesananController extends Controller
                 'uuid_user' => $request['uuid_user'],
                 'id' => $request['id']
             ])->first();
-            
+           
             $get_produk = Produk::where('kode_produk', $order_detail->kode_produk)->first();
             $harga_produk = $get_produk->getHargaDiskon($get_produk);
 
@@ -38,7 +41,8 @@ class PesananController extends Controller
                 'image' => $order_detail->produk->image,
                 'type_produk' => $order_detail->produk->type_produk,
                 'form' => $order_detail->produk->form,
-                'kode_toko' => $get_produk->kode_toko
+                'kode_toko' => $get_produk->kode_toko,
+                'kode_produk' => $order_detail->kode_produk
             );
 
             $items['produk'] = $produk;
@@ -69,7 +73,8 @@ class PesananController extends Controller
                 'status_order' => $order_detail->status_order,
                 'waktu_proses' => $order_detail->waktu_proses,
                 'pesanan' => $pesanan,
-                'type_pesanan' => $type_pesanan
+                'type_pesanan' => $type_pesanan,
+                'status_konfirmasi' => $order_detail->status_konfirmasi
             );
 
             $items['order'] = $order;
@@ -103,9 +108,14 @@ class PesananController extends Controller
             $order->tanggal = $order->created_at->format('Y-m-d');
             $order->harga_produk = $harga_produk['harga_fixed'];
             $order->diskon = $harga_produk['harga_diskon'];
+            $order->biaya = number_format($order->biaya, 0);
             
             if($order->produk->type_produk == 'AUTO') {
-                $order->url_download = route('download', ['token' => $akses_download->token, 'uuid' => $akses_download->uuid_user]);
+                if(isset($akses_download)) {
+                    $order->url_download = route('download', ['token' => $akses_download->token, 'uuid' => $akses_download->uuid_user]);
+                }else {
+                    $order->url_download = '';
+                }
             }
         }
         return response()->json([
@@ -114,6 +124,56 @@ class PesananController extends Controller
             'message' => 'Berhasil get pesanan.',
             'detail' => $detail_orders
         ], 200);
+    }
+
+    public function konfirmasi(Request $request) {
+        try {
+            
+            $detail_order = DetailOrder::where([
+                'no_order' => $request->no_order,
+                'kode_produk' => $request->kode_produk
+            ])->first();
+
+            if(empty($detail_order)) {
+                return response()->json([
+                    'status' => true,
+                    'error' => true,
+                    'message' => 'Mohon maaf!, Data pesanan tidak ditemukan.',
+                    'detail' => null
+                ], 404);
+            }
+
+            if($detail_order->status_konfirmasi) {
+                return response()->json([
+                    'status' => true,
+                    'error' => true,
+                    'message' => 'Mohon maaf!, Pesanan sudah dikonfirmasi.',
+                    'detail' => null
+                ]);
+            }
+
+            $detail_order->status_konfirmasi = 1;
+            $detail_order->save();
+
+            SaldoRefaund::addSaldo($detail_order->produk->kode_toko, $detail_order->total_biaya);
+
+            ClearingSaldo::create([
+                'kode_toko' => $detail_order->produk->kode_toko,
+                'saldo' => $detail_order->total_biaya,
+                'tanggal_insert' => now()->format('Y-m-d'),
+                'jadwal_clear' => Carbon::now()->addDay(3)->format('Y-m-d')
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'error' => false,
+                'message' => 'Terimakasih Telah Mengkonfirmasi Pesanan Anda.',
+                'detail' => 1
+            ], 200);
+
+        }catch(\Exception $err) {
+            return ErrorController::getResponseError($err);
+        }
     }
 
 }

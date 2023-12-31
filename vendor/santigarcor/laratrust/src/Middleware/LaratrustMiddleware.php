@@ -55,7 +55,15 @@ class LaratrustMiddleware
             $redirect->with($handler['message']['key'], $handler['message']['content']);
         }
 
-        return $redirect;
+        if (request()->expectsJson()) {
+            return response()->json([
+                'status' => false,
+                 'error' => true,
+                'message' => 'Unauthenticated' ,
+                'detail' => null
+            ], 302);
+        }
+        return redirect()->back();
     }
 
     /**

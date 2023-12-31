@@ -44,10 +44,10 @@
                         </a>
                         
                         <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                            <a class="dropdown-item" onclick="setTypePembayaran('TRANSFER')" href="#">
+                            <a class="dropdown-item" onclick="setTypePembayaran('bank')" href="#">
                                 TRANSFER
                             </a>
-                            <a class="dropdown-item" onclick="setTypePembayaran('WALLET')" href="#">
+                            <a class="dropdown-item" onclick="setTypePembayaran('wallet')" href="#">
                                 WALLET
                             </a>
                         </div>

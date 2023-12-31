@@ -8,6 +8,7 @@ use App\Models\IorPay;
 use App\Models\Produk;
 use App\Models\TrxIorPay;
 use App\Models\DetailToko;
+use App\Models\Pendapatan;
 use App\Models\DetailOrder;
 use Illuminate\Support\Str;
 use App\Models\SaldoRefaund;
@@ -17,16 +18,23 @@ use App\Models\AksesDownload;
 use App\Models\ClearingSaldo;
 use App\Models\PaymentMethod;
 use Illuminate\Support\Carbon;
+use App\Models\NotifikasiAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\TransaksiKomisiReferal;
 use RealRashid\SweetAlert\Facades\Alert;
 use Yajra\DataTables\Facades\DataTables;
 use App\Http\Controllers\API\Handle\ErrorController;
-use App\Models\Pendapatan;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
     public function index() {
+        NotifikasiAdmin::where([
+            'type' => 'konfirmasi-pembayaran',
+            'status_read' => 0
+        ])->update([
+            'status_read' => 1
+        ]);
         return view('admin.payment.index');
     }
 
@@ -154,22 +162,18 @@ class PaymentController extends Controller
                 $total_pembayaran_pertoko = 0;
                 foreach($get_order_toko as $ot) {
                     if($ot->type_produk == 'AUTO') {
-                        $ot->status_order = 'SUCCES';
+                        $ot->status_order = 'SUCCESS';
                         $ot->save();
                     }
-                    $produk_toko = Produk::where('kode_produk', $ot->kode_produk)->first();
-                    $harga_produk = $produk_toko->getHargaDiskon($produk_toko);
-                    $harga_fixed = (float)str_replace(',', '', $harga_produk['harga_fixed']);
-                    $total_pembayaran_pertoko += $harga_fixed;
+                    $total_pembayaran_pertoko += $ot->total_biaya;
                 }
 
-                $biaya_platform = (float) (10 / 100);
-                $potongan_platform = (float) ($total_pembayaran_pertoko * $biaya_platform);
-                $pendapatan_toko = (float) ($total_pembayaran_pertoko - $potongan_platform);
-
-                $get_order_toko->total_biaya = $pendapatan_toko;
+                $paramNotifOrder = [
+                    'order' => $get_order_toko,
+                    'total_biaya' => $total_pembayaran_pertoko
+                ];
                 $user_toko = User::where('uuid', $daftar_toko->user->uuid)->first();
-                SendInvoiceToko::dispatch($user_toko, $get_order_toko);
+                SendInvoiceToko::dispatch($user_toko, $paramNotifOrder);
             }
             
             $order->save();

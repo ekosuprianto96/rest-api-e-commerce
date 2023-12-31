@@ -105,9 +105,9 @@
         { data: 'no_order', search: true, name: 'no_order'},
         { data: 'nama_user', search: true, name: 'nama_user'},
         { data: 'type_pembayaran', search: true, name: 'type_pembayaran'},
-        { data: 'total_withdraw', search: true, name: 'total_withdraw'},
+        { data: 'total', search: true, name: 'total'},
         { data: 'biaya_admin', search: true, name: 'biaya_admin'},
-        { data: 'status_withdraw', search: true, name: 'status_withdraw'},
+        { data: 'status', search: true, name: 'status'},
         { data: 'tanggal', search: true, name: 'tanggal'},
         { data: 'action', name: 'action'},
       ]

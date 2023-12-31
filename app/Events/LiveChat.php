@@ -49,10 +49,6 @@ class LiveChat implements ShouldBroadcast
     }
     public function broadcastAs()
     {
-        if($this->message['is_user']) {
-            return 'live-chat-'.$this->message['kode_toko'];
-        }else {
-            return 'live-chat-'.$this->message['uuid_user'];
-        };
+        return 'live-chat-'.$this->message['to'];
     }
 }

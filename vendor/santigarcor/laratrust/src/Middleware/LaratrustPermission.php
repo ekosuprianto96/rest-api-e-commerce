@@ -19,7 +19,15 @@ class LaratrustPermission extends LaratrustMiddleware
     public function handle($request, Closure $next, $permissions, $team = null, $options = '')
     {
         if (!$this->authorization('permissions', $permissions, $team, $options)) {
-            return $this->unauthorized();
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => false,
+                     'error' => true,
+                    'message' => 'Unauthenticated' ,
+                    'detail' => null
+                ], 302);
+            }
+            return redirect()->back();
         }
 
         return $next($request);

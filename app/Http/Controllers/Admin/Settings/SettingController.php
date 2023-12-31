@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SettingGateway;
 use App\Models\SettingWebsite;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use RealRashid\SweetAlert\Facades\Alert;
 
 class SettingController extends Controller
@@ -49,6 +50,17 @@ class SettingController extends Controller
             $settings_web->lama_clearing_saldo = $request->lama_clearing_saldo;
             $settings_web->biaya_platform = $request->biaya_platform;
             $settings_web->biaya_admin = $request->biaya_admin;
+            $settings_web->tagline = $request->tagline;
+            
+            if($request->hasFile('logo')) {
+                $path = 'assets/logo';
+                File::delete(public_path($path).'/'.$settings_web->logo);
+                $file = $request->file('logo');
+                $ext = $file->getClientOriginalExtension();
+                $newName = 'logo'.'-'.str_replace(' ', '', $settings_web->app_name).'.'.$ext;
+                $file->move(public_path($path), $newName);
+                $settings_web->logo = asset($path.'/'.$newName);
+            }
             $settings_web->save();
 
             $settings_gateway = SettingGateway::first();

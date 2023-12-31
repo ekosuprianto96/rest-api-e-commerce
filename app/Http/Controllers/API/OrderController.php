@@ -16,12 +16,15 @@ use App\Http\Controllers\API\Handle\ErrorController;
 
 class OrderController extends Controller
 {
-    public function show(Request $request) {
-        
-        $order = Order::where('uuid_user', $request['uuid_user'])->latest()->get();
+    public function show(Request $request)
+    {
 
-        foreach($order as $or) {
+        $order = Order::with(['payment'])->where('uuid_user', $request['uuid_user'])->latest()->get();
+
+        foreach ($order as $or) {
             $or->total_biaya = number_format($or->total_biaya, 0);
+            $or->total_potongan = number_format($or->total_potongan, 0);
+            $or->tanggal = $or->created_at->format('d M y');
         }
         return response()->json([
             'status' => true,
@@ -30,7 +33,8 @@ class OrderController extends Controller
             'detail' => $order
         ], 200);
     }
-    public function checkout_manual(Request $request) {
+    public function checkout_manual(Request $request)
+    {
         try {
             DB::beginTransaction();
             $order = Order::where('no_order', $request['no_order'])->first();
@@ -41,7 +45,7 @@ class OrderController extends Controller
             $order->total_biaya = number_format($order->total_biaya, 0);
             $order->total_potongan = number_format($order->total_potongan, 0);
 
-            foreach($detail as $d) {
+            foreach ($detail as $d) {
                 $produk = Produk::where('kode_produk', $d->kode_produk)->first();
                 $produk->harga = $produk->getHargaDiskon($produk);
                 $d['produk'] = $produk;
@@ -58,12 +62,13 @@ class OrderController extends Controller
                     'payment' => $payment
                 ]
             ], 200);
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             DB::rollback();
             return ErrorController::getResponseError($err);
         }
     }
-    public function checkout(Request $request) {
+    public function checkout(Request $request)
+    {
 
         try {
             DB::beginTransaction();
@@ -71,7 +76,7 @@ class OrderController extends Controller
             $detail = DetailOrder::where('no_order', $order->no_order)->get();
             $order->total_biaya = number_format($order->total_biaya, 2);
             $order->total_potongan = number_format($order->total_potongan, 2);
-            foreach($detail as $d) {
+            foreach ($detail as $d) {
                 $produk = Produk::where('kode_produk', $d->kode_produk)->first();
                 $produk->harga = $produk->getHargaDiskon($produk);
                 $d['produk'] = $produk;
@@ -81,26 +86,27 @@ class OrderController extends Controller
             return response()->json([
                 'status' => true,
                 'error' => false,
-                'message' => 'Berhasil Gaet Order',
+                'message' => 'Berhasil Get Order',
                 'detail' => [
                     'order' => $order,
                     'detail' => $detail
                 ]
             ], 200);
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             DB::rollback();
             return ErrorController::getResponseError($err);
         }
     }
 
-    public function cancel(Request $request) {
+    public function cancel(Request $request)
+    {
         try {
             $order = Order::where([
                 'no_order' => $request['no_order'],
                 'uuid_user' => $request['uuid_user']
             ])->first();
-    
-            if($order) {
+
+            if ($order) {
                 $order->status_order = 'CANCEL';
                 $order->save();
                 return response()->json([
@@ -117,16 +123,17 @@ class OrderController extends Controller
                 'message' => 'Ada masalah Kecil, Silahkan Coba Lagi.',
                 'detail' => []
             ]);
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }
 
-    public function akses(Request $request) {
+    public function akses(Request $request)
+    {
         try {
             $akses = AksesDownload::with('produk')->where('uuid_user', $request['uuid_user'])->get();
 
-            if(empty($request['uuid_user']) || $request['uuid_user'] != Auth::user()->uuid) {
+            if (empty($request['uuid_user']) || $request['uuid_user'] != Auth::user()->uuid) {
                 return response()->json([
                     'status' => false,
                     'error' => true,
@@ -139,21 +146,22 @@ class OrderController extends Controller
                 'message' => 'Berhasil get akses',
                 'detail' => $akses
             ], 200);
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }
 
-    public function konfirmasi(Request $request) {
+    public function konfirmasi(Request $request)
+    {
 
         $order = Order::with(['detail'])->where([
             'no_order' => $request['no_order'],
             'uuid_user' => $request['uuid_user']
         ])->first();
-        
+
         $konfirmasi = KonfirmasiPembayaran::where('no_order', $request['no_order'])->first();
 
-        if($konfirmasi) {
+        if ($konfirmasi) {
             $konfirmasi->delete();
         }
 

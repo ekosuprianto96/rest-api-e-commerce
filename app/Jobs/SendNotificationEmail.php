@@ -22,9 +22,11 @@ class SendNotificationEmail implements ShouldQueue
      * @return void
      */
     public $user;
-    public function __construct(User $user)
+    public $data;
+    public function __construct(User $user, $data)
     {
         $this->user = $user;
+        $this->data = $data;
     }
 
     /**
@@ -35,6 +37,6 @@ class SendNotificationEmail implements ShouldQueue
     public function handle()
     {
         $user = $this->user;
-        $user->notify((new RegisterNotification($user))->afterCommit());;
+        $user->notify(new RegisterNotification($user, $this->data));
     }
 }

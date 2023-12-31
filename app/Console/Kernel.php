@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Jobs\AutoBlockToko;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\ProsesClearingSaldoToko;
 use Illuminate\Console\Scheduling\Schedule;
@@ -17,7 +18,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->job(new ProsesClearingSaldoToko)->everyMinute();
+        $schedule->job(new ProsesClearingSaldoToko)->everyMinute();
+        $schedule->job(new AutoBlockToko)->everyMinute();
         $schedule->command('que:work')->everyMinute();
         Log::info('Cronjob berhasil dijalankan');
     }

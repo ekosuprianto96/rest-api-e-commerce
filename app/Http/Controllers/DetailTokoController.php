@@ -7,21 +7,23 @@ use Midtrans\Config;
 use App\Models\Order;
 use App\Helper\Helper;
 use App\Models\Produk;
+use App\Models\Wishlist;
 use App\Models\DetailToko;
+use App\Models\FormProduk;
 use App\Models\DetailOrder;
 use Illuminate\Support\Str;
+use App\Models\Notification;
 use Illuminate\Http\Request;
+use App\Models\PesananProduk;
 use App\Models\ListFormProduk;
 use App\Models\SettingGateway;
 use App\Models\SettingWebsite;
+use Illuminate\Support\Carbon;
 use App\Models\WaktuProsesOrder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use App\Http\Controllers\API\Handle\ErrorController;
-use App\Models\Notification;
-use App\Models\PesananProduk;
-use App\Models\Wishlist;
 
 class DetailTokoController extends Controller
 {
@@ -36,15 +38,16 @@ class DetailTokoController extends Controller
         Config::$isProduction = $this->settings_gateway->is_production;
         Config::$is3ds = $this->settings_gateway->is_3ds;
     }
-    
-    public function profile(Request $request) {
+
+    public function profile(Request $request)
+    {
         try {
 
             $toko = DetailToko::with(['produk'])->where([
                 'kode_toko' => $request['kode_toko']
             ])->first();
-            
-            if(empty($toko)) {
+
+            if (empty($toko)) {
                 return response()->json([
                     'status' => false,
                     'error' => true,
@@ -54,7 +57,7 @@ class DetailTokoController extends Controller
             }
 
             $toko->total_produk_terjual = $toko->order->count();
-            foreach($toko->produk as $produk) {
+            foreach ($toko->produk as $produk) {
                 $wishlist = Wishlist::where([
                     'kode_produk' => $produk->kode_produk,
                     'uuid_user' => Auth::user()->uuid
@@ -63,9 +66,9 @@ class DetailTokoController extends Controller
                 $produk->nama_kategori = $produk->kategori->nama_kategori;
                 $produk->detail_harga = $produk->getHargaDiskon();
 
-                if(isset($wishlist)) {
+                if (isset($wishlist)) {
                     $produk->wishlist = 1;
-                }else {
+                } else {
                     $produk->wishlist = 0;
                 }
             }
@@ -75,12 +78,14 @@ class DetailTokoController extends Controller
                 'message' => 'Berhasil get toko',
                 'detail' => $toko
             ], 200);
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }
-    public function detail() {
+    public function detail()
+    {
         $detail = DetailToko::with('saldo')->where('uuid_user', Auth::user()->uuid)->first();
+
         $detail->saldo->total_saldo = number_format($detail->saldo->total_saldo, 2, '.');
         $detail->saldo_refaund->total_refaund = number_format($detail->saldo_refaund->total_refaund, 2, '.');
 
@@ -92,7 +97,8 @@ class DetailTokoController extends Controller
         ], 200);
     }
 
-    public function update(Request $request) {
+    public function update(Request $request)
+    {
         $request->validate([
             'nama_toko' => 'required|string|min:6',
             'alamat_toko' => 'required|string|min:6|max:50',
@@ -100,7 +106,7 @@ class DetailTokoController extends Controller
 
         try {
             $toko = DetailToko::where('uuid_user', Auth::user()->uuid)->first();
-            if($toko) {
+            if ($toko) {
                 $toko->nama_toko = $request['nama_toko'];
                 $toko->alamat_toko = $request['alamat_toko'];
                 $toko->jam_buka = $request['jam_buka'];
@@ -112,7 +118,7 @@ class DetailTokoController extends Controller
                     'message' => 'Berhasil Update Toko',
                     'detail' => $toko
                 ], 200);
-            }else {
+            } else {
                 return response()->json([
                     'status' => false,
                     'error' => true,
@@ -120,22 +126,23 @@ class DetailTokoController extends Controller
                     'detail' => []
                 ], 400);
             }
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }
 
-    public function upload_image(Request $request) {
+    public function upload_image(Request $request)
+    {
         $request->validate([
             'image' => 'required|image|mimes:jpg,png,svg,jpeg,webp|max:30000'
         ]);
 
         try {
-            if($request->hasFile('image')) {
+            if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 $fileName = time() . '.' . $file->getClientOriginalExtension();
-                $image = asset('assets/toko/image/'.Auth::user()->toko->kode_toko.'/'.$fileName);
-                $file->move(public_path('assets/toko/image/'.Auth::user()->toko->kode_toko), $fileName);
+                $image = asset('assets/toko/image/' . Auth::user()->toko->kode_toko . '/' . $fileName);
+                $file->move(public_path('assets/toko/image/' . Auth::user()->toko->kode_toko), $fileName);
                 DetailToko::where('uuid_user', Auth::user()->uuid)->update([
                     'image' => $image
                 ]);
@@ -147,19 +154,20 @@ class DetailTokoController extends Controller
                     'image' => $image
                 ], 200);
             }
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }
 
-    public function order($kode_toko) {
+    public function order($kode_toko)
+    {
 
-        $detail_orders = DetailOrder::with(['order'])->where([
+        $detail_orders = DetailOrder::with(['order', 'produk'])->where([
             'kode_toko' => $kode_toko
         ])->latest()->get();
-        
-    
-        foreach($detail_orders as $order) {
+
+        $array_response = [];
+        foreach ($detail_orders as $order) {
             $produk = Produk::where('kode_produk', $order->kode_produk)->first();
 
             $notif_order = Notification::where([
@@ -167,38 +175,117 @@ class DetailTokoController extends Controller
                 'to' => $produk->toko->user->uuid
             ])->first();
 
-            if(isset($notif_order)) {
+            if (isset($notif_order)) {
                 $notif_order->delete();
             }
 
             $harga_produk = $produk->getHargaDiskon($produk);
-            $order->nama_pembeli = $order->user->full_name;
-            $order->tanggal = $order->created_at->format('Y-m-d');
-            $order->total_biaya = $harga_produk['harga_fixed'];
-            $order->total_potongan = $harga_produk['harga_diskon'];
-
-            if($order->created_at->format('Y-m-d') == now()->format('Y-m-d')) {
+            if ($order->created_at->format('Y-m-d') == now()->format('Y-m-d')) {
                 $order->status_new_order = 1;
-            }else {
+            } else {
                 $order->status_new_order = 0;
             }
+
+            $orderData = [
+                'id' => $order->id,
+                'no_order' => $order->no_order,
+                'biaya_platform' => number_format($order->potongan_platform, 0),
+                'total_biaya' => number_format($order->total_biaya, 0),
+                'total_diskon' => number_format($order->potongan_diskon, 0),
+                'potongan_referal' => number_format($order->potongan_referal, 0),
+                'tanggal' => $order->created_at->format('Y-m-d'),
+                'status_order' => $order->order->status_order,
+                'status_pembayaran' => $order->status_konfirmasi,
+                'status_new_order' => $order->status_new_order,
+            ];
+            $produkData = [
+                'image' => $order->produk->image,
+                'nama_produk' => $order->produk->nm_produk,
+                'kode_produk' => $order->produk->kode_produk,
+                'harga' => $harga_produk,
+                'type_produk' => $order->produk->type_produk,
+                'kategori' => $order->produk->kategori->nama_kategori
+            ];
+            $pemebeli = [
+                'nama_pembeli' => $order->user->full_name,
+                'uuid_user' => $order->user->uuid
+            ];
+
+            $orderList = [
+                'order' => $orderData,
+                'produk' => $produkData,
+                'pembeli' => $pemebeli
+            ];
+
+            $array_response[] = $orderList;
         }
+
+        $total_penjualan = $detail_orders->sum('total_biaya');
+        $total_terjual = $detail_orders->count();
+        $penghasilan = [
+            'total_penjualan' => number_format($total_penjualan, 0),
+            'total_terjual' => $total_terjual
+        ];
+
+        // data chart
+        $bulanSekarang = Carbon::now()->format('m');
+        if ($bulanSekarang <= 6) {
+            $month = ['Jan', 'Feb', 'Mar', 'Apr', 'Mey', 'Jun'];
+            $data = [
+                'data' => [
+                    [
+                        'nama' => 'Pendapatan',
+                        'data' => [
+                            DetailOrder::whereMonth('created_at', Carbon::JANUARY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                            DetailOrder::whereMonth('created_at', Carbon::FEBRUARY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                            DetailOrder::whereMonth('created_at', Carbon::MARCH)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                            DetailOrder::whereMonth('created_at', Carbon::APRIL)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                            DetailOrder::whereMonth('created_at', Carbon::MAY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                            DetailOrder::whereMonth('created_at', Carbon::JUNE)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya')
+                        ]
+                    ]
+                ]
+            ];
+        } else {
+            $month = ['Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            $data = [
+                [
+                    'name' => 'Pendapatan',
+                    'data' => [
+                        DetailOrder::whereMonth('created_at', Carbon::JULY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                        DetailOrder::whereMonth('created_at', Carbon::AUGUST)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                        DetailOrder::whereMonth('created_at', Carbon::SEPTEMBER)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                        DetailOrder::whereMonth('created_at', Carbon::OCTOBER)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                        DetailOrder::whereMonth('created_at', Carbon::NOVEMBER)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                        DetailOrder::whereMonth('created_at', Carbon::DECEMBER)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya')
+                    ]
+                ]
+            ];
+        }
+        $arrayKomisi['charts'] = [
+            'bulan' => $month,
+            'data' => $data
+        ];
+
         return response()->json([
             'status' => true,
             'error' => false,
             'message' => 'Berhasil get order toko.',
-            'detail' => $detail_orders
+            'detail' => $array_response,
+            'penghasilan' => $penghasilan,
+            'dataCharts' => $arrayKomisi
         ], 200);
     }
 
-    public function produk(Request $request) {
+    public function produk(Request $request)
+    {
         try {
-            $produk_toko = Produk::with(['kategori', 'form'])->where([
+            $produk_toko = Produk::with(['kategori', 'form', 'images'])->where([
                 'kode_toko' => $request['kode_toko'],
                 'an' => 1
             ])->latest()->get();
 
-            foreach($produk_toko as $produk) {
+            foreach ($produk_toko as $produk) {
                 $produk->total_produk_toko = $produk->toko->produk->count();
                 $produk->total_terjual = $produk->order->count();
                 $produk->total_terjual_toko = $produk->toko->order->count();
@@ -211,20 +298,20 @@ class DetailTokoController extends Controller
                 'message' => 'Berhasil get produk toko',
                 'detail' => $produk_toko
             ], 200);
-
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }
 
-    public function destroy_produk(Request $request) {
+    public function destroy_produk(Request $request)
+    {
         try {
             $produk_toko = Produk::where([
                 'kode_produk' => $request['kode_produk'],
                 'kode_toko' => $request['kode_toko']
             ])->first();
 
-            if(isset($produk_toko)) {
+            if (isset($produk_toko)) {
                 $produk_toko->an = 0;
                 $produk_toko->save();
 
@@ -242,20 +329,20 @@ class DetailTokoController extends Controller
                 'message' => 'Not Found',
                 'detail' => 1
             ], 404);
-
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }
 
-    public function edit(Request $request) {
+    public function edit(Request $request)
+    {
         try {
             $produk_toko = Produk::with(['kategori', 'form'])->where([
                 'kode_produk' => $request['kode_produk'],
                 'kode_toko' => $request['kode_toko']
             ])->first();
-            
-            if(empty($produk_toko)) {
+
+            if (empty($produk_toko)) {
                 return response()->json([
                     'status' => false,
                     'error' => true,
@@ -270,31 +357,31 @@ class DetailTokoController extends Controller
                 'message' => 'Berhasil get produk',
                 'detail' => $produk_toko
             ], 200);
-
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }
 
-    public function produk_update(Request $request) {
+    public function produk_update(Request $request)
+    {
 
         $request->validate([
             'nama_produk' => 'required|string|min:6|max:100',
             'kategori' => 'required',
             'deskripsi_produk' => 'required',
             'harga' => 'required|numeric|min:1000',
-            'total_komisi' => ($request['status_referal'] > 0 ? 'required|min:1000|max:'.$request['harga'].'|numeric' : ''),
+            'total_komisi' => ($request['status_referal'] > 0 ? 'required|min:1000|max:' . $request['harga'] . '|numeric' : ''),
             'file' => ($request->hasFile('file') ? 'mimes:txt,pdf,zip|max:2000000' : ''),
             'list_form' => (isset($request['list_form']) ? 'required' : '')
         ]);
 
         try {
             $produk_toko = Produk::where([
-                                'kode_produk' => $request['kode_produk'],
-                                'kode_toko' => $request['kode_toko']
-                            ])->first();
+                'kode_produk' => $request['kode_produk'],
+                'kode_toko' => $request['kode_toko']
+            ])->first();
 
-            if(empty($produk_toko)) {
+            if (empty($produk_toko)) {
                 return response()->json([
                     'status' => false,
                     'error' => true,
@@ -312,7 +399,7 @@ class DetailTokoController extends Controller
             $produk_toko->potongan_persen = (isset($request['potongan_persen']) ? $request['potongan_persen'] : 0);
             $produk_toko->link_referal = 'https://iorsale.com';
 
-            if($request['status_referal'] > 0) {
+            if ($request['status_referal'] > 0) {
                 $produk_toko->status_referal = 1;
                 $produk_toko->komisi_referal = $request['total_komisi'];
             }
@@ -325,19 +412,19 @@ class DetailTokoController extends Controller
             // }else {
             //     $produk_toko->type_produk = 'MANUAL';
             // }
-            
-            if($request->hasFile('image')) {
+
+            if ($request->hasFile('image')) {
                 $request->validate([
                     'image' => 'mimes:png,jpeg,jpg,svg,webp|max:2000000'
                 ]);
 
-                if($produk_toko->image != null) {
-                    File::delete(public_path('produk/image/'.Auth::user()->toko->kode_toko).$produk_toko->image);
+                if ($produk_toko->image != null) {
+                    File::delete(public_path('produk/image/' . Auth::user()->toko->kode_toko) . $produk_toko->image);
                 }
                 $file = $request->file('image');
                 $fileName = time() . '.' . $file->getClientOriginalExtension();
-                $path = asset('produk/image/'.Auth::user()->toko->kode_toko.'/'.$fileName);
-                $file->move(public_path('produk/image/'.Auth::user()->toko->kode_toko), $fileName);
+                $path = asset('produk/image/' . Auth::user()->toko->kode_toko . '/' . $fileName);
+                $file->move(public_path('produk/image/' . Auth::user()->toko->kode_toko), $fileName);
                 $produk_toko->image = $path;
             }
 
@@ -367,18 +454,19 @@ class DetailTokoController extends Controller
                 'error' => false,
                 'message' => 'Berhasil update produk'
             ], 200);
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }
-    public function message() {
+    public function message()
+    {
         $pesan = Auth::user()->toko->message->groupBy('uuid_user');
 
         $message = array();
-        foreach($pesan as $key => $value) {
+        foreach ($pesan as $key => $value) {
             $user = User::where('uuid', $key)->first();
             $pesan = $user->message->where('kode_toko', Auth::user()->toko->kode_toko);
-            foreach($pesan as $ms) {
+            foreach ($pesan as $ms) {
                 $ms->tgl_pesan = $ms->created_at->format('d-m-y');
             }
             array_push($message, array(
@@ -394,18 +482,29 @@ class DetailTokoController extends Controller
         ], 200);
     }
 
-    public function detail_order(Request $request) {
+    public function detail_order(Request $request)
+    {
         try {
             $order_detail = DetailOrder::where([
                 'no_order' => $request['no_order'],
                 'kode_toko' => $request['kode_toko'],
                 'id' => $request['id']
             ])->first();
-            
+
             $get_produk = Produk::where('kode_produk', $order_detail->kode_produk)->first();
             $harga_produk = $get_produk->getHargaDiskon($get_produk);
 
-            $items = array();
+            $list_form = [];
+            foreach ($order_detail->produk->form as $form) {
+                $data_form = FormProduk::where([
+                    'id_form' => $form->id,
+                    'kode_produk' => $form->kode_produk,
+                    'uuid_user' => Auth::user()->uuid
+                ])->first();
+
+                $form->value_form = (isset($data_form) ? $data_form->value : '');
+                array_push($list_form, $form);
+            }
 
             $produk = array(
                 'nama_produk' => $order_detail->produk->nm_produk,
@@ -417,7 +516,7 @@ class DetailTokoController extends Controller
                 'image' => $order_detail->produk->image,
                 'type_produk' => $order_detail->produk->type_produk,
                 'status_referal' => $order_detail->produk->status_referal,
-                'form' => $order_detail->produk->form
+                'form' => $list_form
             );
 
             $items['produk'] = $produk;
@@ -428,7 +527,7 @@ class DetailTokoController extends Controller
             $total_pendapatan = (float) $get_produk->getHargaFixed() - $biaya_platform;
             $status_new_order = 0;
 
-            if($order_detail->created_at->format('Y-m-d') == now()->format('Y-m-d')) {
+            if ($order_detail->created_at->format('Y-m-d') == now()->format('Y-m-d')) {
                 $status_new_order = 1;
             }
             $order = array(
@@ -450,12 +549,13 @@ class DetailTokoController extends Controller
                 'message' => 'Berhasil get detail order',
                 'detail' => $items
             ], 200);
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }
 
-    public function upload_file(Request $request) {
+    public function upload_file(Request $request)
+    {
         try {
 
             $order = DetailOrder::with(['user'])->where([
@@ -463,23 +563,23 @@ class DetailTokoController extends Controller
                 'id' => $request['id']
             ])->first();
 
-            if($request->hasFile('file')) {
+            if ($request->hasFile('file')) {
                 $file = $request->file('file');
                 $ext = $file->getClientOriginalExtension();
-                $newname = date('Ymd').rand(1000, 999).$order->uuid_user.'.'.$ext;
-                $file->move(public_path('assets/users/'.$order->user->username), $newname);
+                $newname = date('Ymd') . rand(1000, 999) . $order->uuid_user . '.' . $ext;
+                $file->move(public_path('assets/users/' . $order->user->username), $newname);
 
                 $param = [
                     'no_order' => $order->no_order,
                     'uuid_user' => $order->uuid_user,
                     'kode_toko' => $order->kode_toko,
                     'kode_produk' => $order->kode_produk,
-                    'file' => asset('assets/users/'.$order->user->username.'/'.$newname)
+                    'file' => asset('assets/users/' . $order->user->username . '/' . $newname)
                 ];
 
                 $status = PesananProduk::create($param);
 
-                if($status) {
+                if ($status) {
                     $order->status_order = 'SUCCESS';
                     $order->save();
                 }
@@ -488,6 +588,26 @@ class DetailTokoController extends Controller
                     'error' => false,
                     'message' => 'Berhasil mengirim file.',
                 ], 200);
+            } else {
+                $param = [
+                    'no_order' => $order->no_order,
+                    'uuid_user' => $order->uuid_user,
+                    'kode_toko' => $order->kode_toko,
+                    'kode_produk' => $order->kode_produk,
+                    'text' => nl2br($request['text'])
+                ];
+
+                $status = PesananProduk::create($param);
+
+                if ($status) {
+                    $order->status_order = 'SUCCESS';
+                    $order->save();
+                }
+                return response()->json([
+                    'status' => true,
+                    'error' => false,
+                    'message' => 'Berhasil mengirim text.',
+                ], 200);
             }
 
             return response()->json([
@@ -495,12 +615,12 @@ class DetailTokoController extends Controller
                 'error' => true,
                 'message' => 'Maaf, Harap Upload File Anda.',
             ], 201);
-
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }
-    public function prosesOrder(Request $request) {
+    public function prosesOrder(Request $request)
+    {
         try {
             DB::beginTransaction();
             $order_detail = DetailOrder::where([
@@ -508,8 +628,8 @@ class DetailTokoController extends Controller
                 'no_order' => $request['no_order'],
                 'id' => $request['id']
             ])->first();
-            
-            if($request['waktu_proses'] == '' || $request['catatan'] == '') {
+
+            if ($request['waktu_proses'] == '' || $request['catatan'] == '') {
                 return response()->json([
                     'status' => false,
                     'error' => true,
@@ -517,7 +637,7 @@ class DetailTokoController extends Controller
                 ], 402);
             }
 
-            if($order_detail->status_order == 'PENDING') {
+            if ($order_detail->status_order == 'PENDING') {
                 $order_detail->status_order = 'PROCCESS';
                 $order_detail->save();
             }
@@ -534,26 +654,26 @@ class DetailTokoController extends Controller
             return response()->json([
                 'status' => true,
                 'error' => false,
-                'message' => 'Order Produk Manual Berhasil Di Update Dangan Satatus '.$order_detail->status_order.'.',
+                'message' => 'Order Produk Manual Berhasil Di Update Dangan Satatus ' . $order_detail->status_order . '.',
                 'detail' => $order_detail->status_order
             ], 200);
-
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             DB::rollBack();
             return ErrorController::getResponseError($err);
         }
     }
 
-    public function notifikasi(Request $request) {
+    public function notifikasi(Request $request)
+    {
         try {
             $notifikasi = Notification::where([
                 'to' => $request['uuid_user'],
                 'status_read' => 0
             ])->get();
-            
+
             $detail['pesan_toko'] = count(collect($notifikasi)->where('type', 'pesan_toko'));
             $detail['order_toko'] = count(collect($notifikasi)->where('type', 'order_toko'));
-            
+
             return response()->json(
                 [
                     'status' => true,
@@ -561,8 +681,8 @@ class DetailTokoController extends Controller
                     'message' => 'Berhasil get notifikasi',
                     'detail' => $detail
                 ]
-                );
-        }catch(\Exception $err) {
+            );
+        } catch (\Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }

@@ -14,7 +14,7 @@
     <h1 style="font-size: 1.5em"></h1>
     <div class="card">
       <div class="card-body">
-        <form action="{{ route('admin.settings.update') }}" method="POST">
+        <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
           @csrf
           <div class="row">
             <div class="col-md-6">
@@ -62,6 +62,28 @@
                 </div>
               </div>
             </div>
+            <div class="col-md-12 mb-3">
+              <h4 class="mb-3">Website</h4>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="w-100 position-relative" style="height: 180px;overflow: hidden;">
+                    <input name="logo" id="inutFile" type="file" accept="image/*" style="position: absolute;left: 0;right: 0;top: 0;bottom: 0;z-index: 999;opacity: 0;">
+                    <div id="prevInput" class="{{ empty($settings_web->logo) ? 'd-flex' : 'd-none' }} border rounded-md flex-column justify-content-center align-items-center w-100 h-100">
+                      <i class="ri-image-add-fill" style="font-size: 2em;"></i>
+                      <span>Upload Logo</span>
+                    </div>
+                    <div id="prevImage" class="{{ isset($settings_web->logo) ? 'd-flex' : 'd-none' }} border justify-content-center align-items-center flex-column w-100 h-100">
+                      <img width="100" src="{{ $settings_web->logo ?? '' }}" id="imagePrev">
+                      <span class="d-block">Logo {{ $settings_web->app_name }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-8">
+                  <label for="">Tagline</label>
+                  <textarea placeholder="Tulis tagline website..." class="form-control" name="tagline" id="" style="resize: none;" rows="5">{{ $settings_web->tagline ?? '' }}</textarea>
+                </div>
+              </div>
+            </div>
             <div class="col-md-12 d-flex align-items-center" style="gap: 7px;">
               <button class="btn btn-success">Update</button>
             </div>
@@ -78,6 +100,14 @@
       minHeight: 300,
       maxHeight: 300
     });
+
+    $('#inutFile').change(function(event) {
+      const file = event.target.files[0];
+      const url = URL.createObjectURL(file);
+      $('#imagePrev').prop('src', url);
+      $('#prevImage').removeClass('d-none').addClass('d-flex');
+      $('#prevInput').removeClass('d-flex').addClass('d-none');
+    })
   });
 </script>
 @endsection

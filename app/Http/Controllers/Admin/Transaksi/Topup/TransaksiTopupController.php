@@ -29,7 +29,7 @@ class TransaksiTopupController extends Controller
             }
             
             // dd($where);
-            $trx_topup = TrxIorPay::whereRaw($where)->latest()->get();
+            $trx_topup = TrxIorPay::whereRaw($where)->where('keterangan', 'Topup Saldo')->latest()->get();
             // dd($trx_withdraw);
             $data = DataTables::of($trx_topup)
                     ->addColumn('no_order', function($list) {
@@ -39,23 +39,26 @@ class TransaksiTopupController extends Controller
                         return $list->iorPay->user->full_name;
                     })
                     ->addColumn('type_pembayaran', function($list) {
-                        return $list->type_pembayaran;
+                        if($list->jenis_pembayaran == 'manual') {
+                            return $list->payment->payment_name;
+                        }
+                        return $list->jenis_pembayaran;
                     })
-                    ->addColumn('total_withdraw', function($list) {
-                        return 'Rp. '.number_format($list->total_withdraw, 0);
+                    ->addColumn('total', function($list) {
+                        return 'Rp. '.number_format($list->total_trx, 0);
                     })
                     ->addColumn('biaya_admin', function($list) {
                         return 'Rp. '.number_format($list->biaya_adm);
                     })
-                    ->addColumn('status_withdraw', function($list) {
+                    ->addColumn('status', function($list) {
 
-                        if($list->status_withdraw == 'PENDING') {
+                        if($list->status_trx == 'PENDING') {
                             $status = '<span class="badge badge-sm badge-warning">PENDING</span>';
-                        }else if($list->status_withdraw == 'SUCCESS') {
+                        }else if($list->status_trx == 'SUCCESS') {
                             $status = '<span class="badge badge-sm badge-success">SUCCESS</span>';
-                        }else if($list->status_withdraw == 'CANCEL') {
+                        }else if($list->status_trx == 'CANCEL') {
                             $status = '<span class="badge badge-sm badge-danger">CANCEL</span>';
-                        }else if($list->status_withdraw == '0') {
+                        }else if($list->status_trx == '0') {
                             $status = '<span class="badge badge-sm badge-warning">Belum Dikonfirmasi</span>';
                         }
 
@@ -68,7 +71,7 @@ class TransaksiTopupController extends Controller
                         return '<div class="d-flex align-items-center justify-content-center" style="gap: 7px;">
                                     <a href="'.route('admin.transaksi.detail', $list->no_trx).'" class="btn btn-sm btn-primary text-nowrap" style="font-size: 0.8em"><i class="fa fa-eye"></i> Detail</a>
                                 </div>';
-                    })->rawColumns(['nomor_order', 'nama_user', 'type_pembayaran', 'biaya_admin', 'total_withdraw', 'status_withdraw', 'tanggal', 'action'])
+                    })->rawColumns(['nomor_order', 'nama_user', 'type_pembayaran', 'biaya_admin', 'total', 'status', 'tanggal', 'action'])
                     ->make(true);
 
             return $data;

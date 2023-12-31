@@ -10,11 +10,16 @@ class TrxWithdrawIorPay extends Model
     use HasFactory;
     protected $table = 'trx_withdraw_ior_pay';
 
-    public function iorPay() {
+    public function iorPay()
+    {
         return $this->belongsTo(IorPay::class, 'kode_pay', 'kode_pay');
     }
-    public function bank() {
+    public function bank()
+    {
         return $this->belongsTo(PaymentMethod::class, 'bank_tujuan', 'kode_payment');
     }
-
+    public function trxIorPay()
+    {
+        return $this->belongsTo(TrxIorPay::class, 'no_trx_pay', 'no_trx');
+    }
 }

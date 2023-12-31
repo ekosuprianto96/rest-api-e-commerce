@@ -10,13 +10,19 @@ class Message extends Model
     use HasFactory;
     protected $table = 'message';
     protected $guarded = ['id'];
+    protected $primaryKey = 'id_room';
+    public $keyType = 'string';
+    public $incrementing = false;
     
 
     
-    public function user() {
-        return $this->belongsTo(User::class, 'uuid_user', 'uuid');
+    public function users() {
+        return $this->belongsToMany(User::class, 'message_user', 'message_id', 'uuid_user', 'id_room');
     }
-    public function toko() {
-        return $this->belongsTo(DetailToko::class, 'kode_toko', 'kode_toko');
+    public function toUser() {
+        return $this->belongsTo(User::class, 'to', 'uuid');
+    }
+    public function fromUser() {
+        return $this->belongsTo(User::class, 'from', 'uuid');
     }
 }

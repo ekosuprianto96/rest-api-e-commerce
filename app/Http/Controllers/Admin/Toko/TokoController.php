@@ -52,6 +52,8 @@ class TokoController extends Controller
                             $status = '<span class="badge badge-sm badge-warning">PENDING</span>';
                         }else if($list->status_toko == 'APPROVED') {
                             $status = '<span class="badge badge-sm badge-success">APPROVED</span>';
+                        }elseif($list->status_toko == 3) {
+                            $status = '<span class="badge badge-sm badge-danger">BLOCK SEMNETARA</span>';
                         }
 
                         return $status;

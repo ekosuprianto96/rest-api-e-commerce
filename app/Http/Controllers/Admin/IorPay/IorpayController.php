@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\IorPay;
 use App\Models\IorPay;
 use App\Models\TrxIorPay;
 use Illuminate\Http\Request;
+use App\Models\NotifikasiAdmin;
 use App\Models\TransaksiAccount;
 use App\Models\TrxWithdrawIorPay;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,12 @@ use App\Http\Controllers\API\Handle\ErrorController;
 class IorpayController extends Controller
 {
     public function permintaan_topup() {
+        NotifikasiAdmin::where([
+            'type' => 'konfirmasi-topup',
+            'status_read' => 0
+        ])->update([
+            'status_read' => 1
+        ]);
         return view('admin.iorpay.konfirmasi_topup');
     }
 
@@ -134,6 +141,13 @@ class IorpayController extends Controller
         $trx_withdraw = TrxWithdrawIorPay::where([
             'status_withdraw' => 0,
         ])->paginate(20);
+
+        NotifikasiAdmin::where([
+            'type' => 'permintaan-withdraw',
+            'status_read' => 0
+        ])->update([
+            'status_read' => 1
+        ]);
 
         return view('admin.iorpay.konfirmasi_withdraw', compact('trx_withdraw'));
     }

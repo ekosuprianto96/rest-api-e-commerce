@@ -2,18 +2,21 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Events\NotifikasiOrderToko;
+use Error;
 use Carbon\Carbon;
 use Midtrans\Snap;
 use App\Models\Cart;
 use App\Models\User;
 use Midtrans\Config;
 use App\Models\Order;
+use App\Models\IorPay;
+use App\Models\MsMenu;
 use App\Models\Produk;
 use App\Models\SaldoToko;
+use App\Models\TrxIorPay;
 use App\Models\DetailToko;
+use App\Models\Pendapatan;
 use Midtrans\Notification;
-use App\Models\Notification as Notif;
 use App\Models\DetailOrder;
 use Illuminate\Support\Str;
 use App\Models\SaldoRefaund;
@@ -21,19 +24,20 @@ use Illuminate\Http\Request;
 use App\Jobs\SendInvoiceToko;
 use App\Models\AksesDownload;
 use App\Models\ClearingSaldo;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\API\Handle\ErrorController;
-use App\Http\Controllers\API\Payment\SaldoTokoController;
-use App\Models\IorPay;
-use App\Models\Pendapatan;
 use App\Models\SettingGateway;
 use App\Models\SettingWebsite;
 use App\Models\TransaksiAccount;
+use App\Events\NotificationAdmin;
+use Illuminate\Support\Facades\DB;
+use App\Events\NotifikasiOrderToko;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Notification as Notif;
+use Illuminate\Support\Facades\Route;
 use App\Models\TransaksiKomisiReferal;
-use App\Models\TrxIorPay;
-use Error;
+use App\Http\Controllers\API\Handle\ErrorController;
+use App\Http\Controllers\API\Payment\SaldoTokoController;
+use App\Models\NotifikasiAdmin;
 
 class CheckoutController extends Controller
 {
@@ -76,7 +80,7 @@ class CheckoutController extends Controller
                 $total += (float) ($potongan > 0 ? $potongan : $produk->harga);
 
             }
-
+            
             $kode_unique = rand(111, 999);
             $order = new Order();
             $order->biaya_platform = 0;
@@ -103,12 +107,23 @@ class CheckoutController extends Controller
                     'kode_unique' => $order->kode_unique,
                     'keterangan' => 'Order Produk'
                 ];
-
+                
                 TransaksiAccount::create($param_trx_account);
+                $notification_admin = array(
+                    'uuid' => Str::uuid(32),
+                    'type' => 'konfirmasi-pembayaran',
+                    'target' => 'konfirmasi-pembayaran',
+                    'value' => json_encode($param_trx_account),
+                    'status_read' => 0
+                );
+                
+                NotifikasiAdmin::create($notification_admin);
+                
+                event(new NotificationAdmin($notification_admin));
             }else {
                 $order->total_biaya = $total;
             }
-
+            
             if($request['type_payment'] == 'iorpay') {
                 $pay = IorPay::where('uuid_user', Auth::user()->uuid)->first();
 
@@ -170,16 +185,17 @@ class CheckoutController extends Controller
                                         'url_file' => 'storage/file_produk/'.$produk->toko->kode_toko.'/'.$produk->file_name
                                     ]);
                                 }
+
+                                SaldoRefaund::addSaldo($produk->kode_toko, $total);
+
+                                ClearingSaldo::create([
+                                    'kode_toko' => $produk->kode_toko,
+                                    'saldo' => $total,
+                                    'tanggal_insert' => now()->format('Y-m-d'),
+                                    'jadwal_clear' => Carbon::now()->addDay(3)->format('Y-m-d')
+                                ]);
                             }
 
-                            SaldoRefaund::addSaldo($produk->kode_toko, $total);
-
-                            ClearingSaldo::create([
-                                'kode_toko' => $produk->kode_toko,
-                                'saldo' => $total,
-                                'tanggal_insert' => now()->format('Y-m-d'),
-                                'jadwal_clear' => Carbon::now()->addDay(3)->format('Y-m-d')
-                            ]);
                         }
                     }
                 }
@@ -271,9 +287,20 @@ class CheckoutController extends Controller
                     'value' => $detail,
                     'status_read' => 0
                 );
-    
+
+                $notification_admin = array(
+                    'uuid' => Str::uuid(32),
+                    'type' => 'daftar-order',
+                    'target' => 'daftar-order',
+                    'value' => $detail,
+                    'status_read' => 0
+                );
+
+                NotifikasiAdmin::create($notification_admin);
+                
                 Notif::create($notification);
                 event(new NotifikasiOrderToko($notification));
+                event(new NotificationAdmin($notification_admin));
             }
         
             $params = array(
@@ -449,6 +476,14 @@ class CheckoutController extends Controller
                                 }
                             }
                             if($produk->type_produk == 'AUTO') {
+                                SaldoRefaund::addSaldo($produk->kode_toko, $pendapatan_toko);
+                                ClearingSaldo::create([
+                                    'kode_toko' => $produk->kode_toko,
+                                    'saldo' => $pendapatan_toko,
+                                    'tanggal_insert' => now()->format('Y-m-d'),
+                                    'jadwal_clear' => Carbon::now()->addDay(3)->format('Y-m-d')
+                                ]);
+
                                 $token = Str::uuid(32);
                                 
                                 $check_akses = AksesDownload::where([
@@ -466,19 +501,13 @@ class CheckoutController extends Controller
                                     ]);
                                 }
                             }
+
                             $order_toko = DetailOrder::where([
                                                 'no_order' => $order->no_order,
                                                 'kode_toko' => $produk->kode_toko
                                             ])->get();
                             array_push($daftar_order_toko, $produk->kode_toko);
                             error_log("Pendapatan Tok : $pendapatan_toko");
-                            SaldoRefaund::addSaldo($produk->kode_toko, $pendapatan_toko);
-                            ClearingSaldo::create([
-                                'kode_toko' => $produk->kode_toko,
-                                'saldo' => $pendapatan_toko,
-                                'tanggal_insert' => now()->format('Y-m-d'),
-                                'jadwal_clear' => Carbon::now()->addDay(3)->format('Y-m-d')
-                            ]);
                             
                         }
     
@@ -604,6 +633,14 @@ class CheckoutController extends Controller
                                 }
                             }
                             if($produk->type_produk == 'AUTO') {
+                                SaldoRefaund::addSaldo($produk->kode_toko, $pendapatan_toko);
+                                ClearingSaldo::create([
+                                    'kode_toko' => $produk->kode_toko,
+                                    'saldo' => $pendapatan_toko,
+                                    'tanggal_insert' => now()->format('Y-m-d'),
+                                    'jadwal_clear' => Carbon::now()->addDay(3)->format('Y-m-d')
+                                ]);
+
                                 $token = Str::uuid(32);
                                 
                                 $check_akses = AksesDownload::where([
@@ -629,13 +666,7 @@ class CheckoutController extends Controller
     
                             array_push($daftar_order_toko, $produk->kode_toko);
                             error_log("Pendapatan Tok : $pendapatan_toko");
-                            SaldoRefaund::addSaldo($produk->kode_toko, $pendapatan_toko);
-                            ClearingSaldo::create([
-                                'kode_toko' => $produk->kode_toko,
-                                'saldo' => $pendapatan_toko,
-                                'tanggal_insert' => now()->format('Y-m-d'),
-                                'jadwal_clear' => Carbon::now()->addDay(3)->format('Y-m-d')
-                            ]);
+                            
                         }
     
                         $group_toko = array_unique($daftar_order_toko);

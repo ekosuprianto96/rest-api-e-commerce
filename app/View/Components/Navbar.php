@@ -23,6 +23,7 @@ class Navbar extends Component
      */
     public function render()
     {
-        return view('components.navbar');
+        $count_message = 2;
+        return view('components.navbar', compact('count_message'));
     }
 }

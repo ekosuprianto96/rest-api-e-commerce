@@ -20,6 +20,7 @@ class CartController extends Controller
                         ->join('kategori', 'produk.kode_kategori', 'kategori.kode_kategori')
                         ->join('detail_toko', 'produk.kode_toko', 'detail_toko.kode_toko')
                         ->where('carts.uuid_user', Auth::user()->uuid)
+                        ->where('produk.an', 1)
                         ->groupBy('produk.kode_produk')
                         ->get();
             foreach($cart as $c) {

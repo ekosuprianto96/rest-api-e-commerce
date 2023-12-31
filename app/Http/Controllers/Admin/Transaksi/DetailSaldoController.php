@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\TransaksiAccount;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use RealRashid\SweetAlert\Facades\Alert;
 
 class DetailSaldoController extends Controller
 {
@@ -32,7 +33,7 @@ class DetailSaldoController extends Controller
     public function penarikan_dana(Request $request) {
         try {
             DB::beginTransaction();
-
+            
             $transaksi = TransaksiAccount::where('type_payment', 'gateway')
                             ->update([
                                 'type_payment' => 'manual',
@@ -42,6 +43,9 @@ class DetailSaldoController extends Controller
                             ]);
             if($transaksi) {
                 DB::commit();
+                return redirect()->back();
+            }else {
+                Alert::error('Error', 'Data Transaksi Tidak Ditemukan/Saldo 0');
                 return redirect()->back();
             }
 

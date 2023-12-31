@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Order;
 
 use App\Models\DetailOrder;
 use Illuminate\Http\Request;
+use App\Models\NotifikasiAdmin;
 use App\Http\Controllers\Controller;
 use Yajra\DataTables\Facades\DataTables;
 use App\Http\Controllers\API\Handle\ErrorController;
@@ -11,6 +12,13 @@ use App\Http\Controllers\API\Handle\ErrorController;
 class OrderController extends Controller
 {
     public function daftar_order() {
+        NotifikasiAdmin::where([
+            'type' => 'daftar-order',
+            'status_read' => 0
+        ])->update([
+            'status_read' => 1
+        ]);
+        
         return view('admin.order.index');
     }
 
@@ -44,7 +52,7 @@ class OrderController extends Controller
                         return 'Rp. '.number_format($list->total_biaya);
                     })
                     ->addColumn('status', function($list) {
-                        $status = '-';
+                        $status = $list->status_order;
                         if($list->status_order == 'PENDING') {
                             $status = '<span class="badge badge-sm badge-warning">PENDING</span>';
                         }else if($list->status_order == 'SUCCESS') {

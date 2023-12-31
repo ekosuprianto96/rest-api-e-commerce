@@ -19,17 +19,19 @@ class TransaksiWithdrawController extends Controller
             $where = '1=1';
 
             if(isset($request->type_pembayaran)) {
-                $where .= " and type_pembayaran = '".$request->type_pembayaran."'";
+                $where .= " and payment_methods.type = '".$request->type_pembayaran."'";
             }
             if(isset($request->tanggal_mulai)) {
-                $where .= " and DATE_FORMAT(created_at, '%Y-%m-%d') >= '$request->tanggal_mulai'";
+                $where .= " and DATE_FORMAT(trx_withdraw_ior_pay.created_at, '%Y-%m-%d') >= '$request->tanggal_mulai'";
             }
             if(isset($request->tanggal_akhir)) {
-                $where .= " and DATE_FORMAT(created_at, '%Y-%m-%d') <= '$request->tanggal_akhir'";
+                $where .= " and DATE_FORMAT(trx_withdraw_ior_pay.created_at, '%Y-%m-%d') <= '$request->tanggal_akhir'";
             }
             
             // dd($where);
-            $trx_withdraw = TrxWithdrawIorPay::whereRaw($where)->latest()->get();
+            $trx_withdraw = TrxWithdrawIorPay::whereRaw($where)
+                                            ->join('payment_methods', 'trx_withdraw_ior_pay.bank_tujuan', 'payment_methods.kode_payment')
+                                            ->orderBy('trx_withdraw_ior_pay.created_at', 'desc')->get();
             // dd($trx_withdraw);
             $data = DataTables::of($trx_withdraw)
                     ->addColumn('no_order', function($list) {
