@@ -26,4 +26,12 @@ class DetailOrder extends Model
     public function user() {
         return $this->belongsTo(User::class, 'uuid_user', 'uuid');
     }
+
+    public function waktu_proses() {
+        return $this->hasOne(WaktuProsesOrder::class, 'order_id', 'id');
+    }
+
+    public function file_pesanan() {
+        return $this->belongsTo(PesananProduk::class, 'no_order', 'no_order');
+    }
 }

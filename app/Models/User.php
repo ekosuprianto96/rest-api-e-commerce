@@ -79,8 +79,8 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Wishlist::class, 'uuid_user', 'uuid');
     }
 
-    public function message() {
-        return $this->hasMany(Message::class, 'uuid_user', 'uuid');
+    public function messages() {
+        return $this->belongsToMany(Message::class, 'message_user', 'uuid_user', 'message_id', 'uuid');
     }
 
     public function detail_order() {
@@ -93,5 +93,25 @@ class User extends Authenticatable implements JWTSubject
 
     public function iorPay() {
         return $this->hasOne(IorPay::class, 'uuid_user', 'uuid');
+    }
+    public function trx_account() {
+        return $this->hasMany(TransaksiAccount::class, 'uuid_user', 'uuid');
+    }
+    public function roles() {
+        return $this->belongsToMany(Role::class, 'role_user', 'user_id', 'role_id', 'uuid');
+    }
+
+    public function bannerUpload() {
+        return $this->hasOne(MsBanner::class, 'uuid_user', 'uuid');
+    }
+
+    public function updateNotifikasi() {
+        return $this->hasOne(NotifikasiPengguna::class, 'updateBy', 'uuid');
+    }
+    public function artikel() {
+        return $this->hasMany(Artikel::class, 'created_by', 'uuid');
+    }
+    public function pemberitahuan() {
+        return $this->hasMany(Pemberitahuan::class, 'uuid_user', 'uuid');
     }
 }

@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
-use App\Models\DetailToko;
-use App\Models\Saldo;
-use App\Models\SaldoRefaund;
-use App\Models\SaldoToko;
 use App\Models\User;
+use App\Models\Saldo;
+use App\Models\SaldoToko;
+use App\Models\DetailToko;
+use Illuminate\Support\Str;
+use App\Models\SaldoRefaund;
 use Illuminate\Http\Request;
+use App\Models\NotifikasiAdmin;
+use App\Events\NotificationAdmin;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class RegisterTokoController extends Controller
@@ -37,6 +40,20 @@ class RegisterTokoController extends Controller
                 SaldoRefaund::create([
                     'kode_toko' => $toko->kode_toko
                 ]);
+                $user = User::where('uuid', Auth::user()->uuid)->first();
+                $user->attachRole('toko');
+
+                $notification_admin = array(
+                    'uuid' => Str::uuid(32),
+                    'type' => 'konfirmasi-toko',
+                    'target' => 'konfirmasi-toko',
+                    'value' => $toko,
+                    'status_read' => 0
+                );
+                
+                NotifikasiAdmin::create($notification_admin);
+                event(new NotificationAdmin($notification_admin));
+                
                 return response()->json([
                     'status' => true,
                     'error' => false,

@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\API;
 
 use Carbon\Carbon;
+use App\Models\Cart;
 use App\Models\User;
+use App\Models\IorPay;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\NotifikasiAdmin;
+use App\Events\NotificationAdmin;
 use App\Jobs\SendNotificationEmail;
 use App\Http\Controllers\Controller;
-use App\Models\Cart;
-use App\Models\IorPay;
 use Illuminate\Support\Facades\Hash;
 use App\Notifications\RegisterNotification;
 
@@ -38,13 +40,31 @@ class RegisterController extends Controller
             $user->email = $request['email'];
             $user->tgl_lahir = Carbon::parse($request['tgl_lahir'])->format('d-m-Y');
             $user->password = Hash::make($request['password']);
+            $data['key'] = Str::random(32);
+            $data['nama'] = $user->full_name;
+            $user->remember_token = $data['key'];
+
             if($user->save()) {
                 IorPay::create([
                     'uuid_user' => $user->uuid,
                     'status_pay' => 1
                 ]);
 
-                SendNotificationEmail::dispatch($user);
+                $user_account = User::where('uuid', $user->uuid)->first();
+                $user_account->attachRole('user');
+
+                SendNotificationEmail::dispatch($user, $data);
+
+                $notification_admin = array(
+                    'uuid' => Str::uuid(32),
+                    'type' => 'konfirmasi-user',
+                    'target' => 'konfirmasi-user',
+                    'value' => $user,
+                    'status_read' => 0
+                );
+                NotifikasiAdmin::create($notification_admin);
+                event(new NotificationAdmin($notification_admin));
+
                 return response()->json([
                     'status' => true,
                     'error' => false,

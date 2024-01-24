@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Cache;
 
 class Produk extends Model
 {
@@ -27,45 +29,118 @@ class Produk extends Model
             } else {
                 $number = 1;
             }
-            $detailProduk->kode_produk = 'PD'. str_pad($number, 4, '0', STR_PAD_LEFT);
+            $detailProduk->kode_produk = 'PD' . str_pad($number, 4, '0', STR_PAD_LEFT);
         });
     }
 
-    public function toko() {
+    public function toko()
+    {
         return $this->belongsTo(DetailToko::class, 'kode_toko', 'kode_toko');
     }
-    public function kategori() {
+    public function kategori()
+    {
         return $this->belongsTo(Kategori::class, 'kode_kategori', 'kode_kategori');
     }
 
-    public function getHargaDiskon(Produk $produk) {
-        if($produk->potongan_harga > 0) {
-            $potongan = (float) ($produk->harga - $produk->potongan_harga);
-            $produk->harga_fixed = number_format($potongan, 0);
-            $produk['potongan'] = number_format($produk->potongan_harga, 0);
+    public function getHargaFixed()
+    {
+        if ($this->potongan_persen > 0) {
+            $persen = (float) $this->potongan_persen / 100;
+            $harga_fixed = (float) ($this->harga * $persen);
+            $harga_fixed = (float) ($this->harga - $harga_fixed);
+        } else if ($this->potongan_harga > 0) {
+            $harga_fixed = (float) ($this->harga - $this->potongan_harga);
+        } else {
+            $harga_fixed = $this->harga;
         }
 
-        if($produk->potongan_persen > 0) {
-            $potongan = (float) $produk->harga * ($produk->potongan_persen  / 100);
-            $produk->harga_fixed = (float) $produk->harga - $potongan;
-            $produk['potongan'] = number_format($potongan, 0);
-            $produk->harga_fixed = number_format($produk->harga_fixed, 0);
+        return $harga_fixed;
+    }
+    public function getHargaDiskon()
+    {
+        if ($this->potongan_harga > 0) {
+            $potongan = (float) ($this->harga - $this->potongan_harga);
+            $this->harga_fixed = number_format($potongan, 0);
+            $this['potongan'] = number_format($this->potongan_harga, 0);
+        }
+
+        if ($this->potongan_persen > 0) {
+            $potongan = (float) $this->harga * ($this->potongan_persen  / 100);
+            $this->harga_fixed = (float) $this->harga - $potongan;
+            $this['potongan'] = number_format($potongan, 0);
+            $this->harga_fixed = number_format($this->harga_fixed, 0);
         }
 
         return array(
-            'harga_real' => number_format($produk->harga, 0),
-            'harga_fixed' => ($produk->harga_fixed > 0 ? $produk->harga_fixed : number_format($produk->harga, 0)),
-            'harga_diskon' => ($produk['potongan'] > 0 ? $produk['potongan'] : 0));
+            'harga_real' => number_format($this->harga, 0),
+            'harga_fixed' => ($this->harga_fixed > 0 ? $this->harga_fixed : number_format($this->harga, 0)),
+            'harga_diskon' => ($this['potongan'] > 0 ? $this['potongan'] : 0)
+        );
     }
 
-    public function form() {
+    public function waktuProses()
+    {
+        $waktuProses = WaktuProsesOrder::where('kode', $this->waktu_proses)->first();
+        return $waktuProses->nama;
+    }
+
+    public function form()
+    {
         return $this->hasMany(ListFormProduk::class, 'kode_produk', 'kode_produk');
     }
-    public function order() {
+    public function order()
+    {
         return $this->hasMany(DetailOrder::class, 'kode_produk', 'kode_produk');
     }
-    public function akses() {
+    public function akses()
+    {
         return $this->hasMany(AksesDownload::class, 'kode_produk', 'kode_produk');
+    }
+    public function images()
+    {
+        return $this->hasMany(ImageProduk::class, 'kode_produk', 'kode_produk');
+    }
+
+    public static function getProdukTerlaris()
+    {
+        $produkTerlaris = Cache::tags('produkTerlaris')->rememberForever('produkTerlaris', function () {
+            return Produk::select('produk.*', DB::raw('SUM(detail_orders.quantity) as total_penjualan'))
+                ->leftJoin('detail_orders', 'detail_orders.kode_produk', 'produk.kode_produk')
+                ->where([
+                    'produk.an' => 1,
+                    'produk.status_confirm' => 1
+                ])
+                ->groupBy('produk.kode_produk')
+                ->orderBy('total_penjualan')
+                ->take(20)->get();
+        });
+        if (@count($produkTerlaris) > 0) {
+            foreach ($produkTerlaris as $pr) {
+                $produk = Produk::where('kode_produk', $pr->kode_produk)->first();
+                $pr->detail_harga = $produk->getHargaDiskon($produk);
+            }
+        }
+        return $produkTerlaris;
+    }
+
+    public static function getProdukSerupa(Produk $produk)
+    {
+        $produkSerupa = Cache::tags('produkSerupa')->rememberForever('produkSerupa', function () use ($produk) {
+            return Produk::whereRaw("kode_kategori = '" . $produk->kategori->kode_kategori . "' AND (kode_produk != '" . $produk->kode_produk . "') ")
+                ->where([
+                    'an' => 1,
+                    'status_confirm' => 1
+                ])
+                ->take(20)->get();
+        });
+
+        if (@count($produkSerupa) > 0) {
+            foreach ($produkSerupa as $pr) {
+                $produk = Produk::where('kode_produk', $pr->kode_produk)->first();
+                $pr->detail_harga = $produk->getHargaDiskon($produk);
+            }
+        }
+        return $produkSerupa;
     }
     // public function cart() {
     //     return $this->belongsToMany(Cart::class, 'cart_produk', 'kode_produk', 'kode_cart');

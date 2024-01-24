@@ -17,7 +17,7 @@
     <div class="card">
       <div class="card-body">
         <div class="table-responsive">
-          <table class="table table-striped">
+          <table class="table table-striped w-100" id="table">
             <thead>
               <tr>
                 <th>#</th>
@@ -31,45 +31,68 @@
                 <th class="text-center">Action</th>
               </tr>
             </thead>
-            <tbody>
-              @if($trx_topup->count() > 0) 
-                @foreach($trx_topup as $key => $value)
-                  <tr>
-                    <td>
-                      {{ $trx_topup->firstItem() + $key }}
-                    </td>
-                    <td>{{ $value->no_trx }}</td>
-                    <td>{{ $value->user->full_name }}</td>
-                    <td>Rp. {{ number_format($value->total_fixed, 2) }}</td>
-                    <td>Rp. {{ number_format($value->total_trx, 2) }}</td>
-                    <td>Rp. {{ number_format($value->biaya_adm, 2) }}</td>
-                    <td>{{ $value->kode_unique }}</td>
-                    <td>{{ $value->created_at->format('d/m/Y') }}</td>
-                    <td>
-                      <div class="d-flex align-items-center justify-content-center" style="gap: 7px;">
-                        <a href="{{ route('admin.payment.detail', $value->no_trx) }}" class="btn btn-sm btn-primary text-nowrap" style="font-size: 0.8em"><i class="fa fa-eye"></i> Detail</a>
-                        <form class="m-0" action="{{ route('admin.iorpay.konfirmasi', $value->no_trx) }}" method="POST">
-                          @method('PUT')
-                          @csrf
-                          <button type="submit" class="btn btn-sm btn-success text-nowrap" style="font-size: 0.8em"><i class="ri-checkbox-circle-fill"></i> Konfirmasi</button>
-                        </form>
-                      </div>
-                    </td>
-                  </tr>
-                @endforeach
-              @else 
-                  <tr>
-                    <td colspan="11" align="center" class="p-4">Tidak Ada Data</td>
-                  </tr>
-              @endif
-            </tbody>
-            <tfoot>
-              {{ $trx_topup->links() }}
-            </tfoot>
           </table>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  $(function() {
+    table = $('#table').DataTable({
+      processing: true,
+      serverSide: true,
+      paginate: true,
+      ajax: {
+        method: 'POST',
+        url: '{{ route("admin.iorpay.konfirmasi-topup-data") }}',
+        data: function(d) {
+          d._token = '{{ csrf_token() }}';
+        }
+      },
+      columns: [
+        { data: '#', 
+            render: function(data, type, row, meta) {
+              return meta.row + meta.settings._iDisplayStart + 1;
+        }},
+        { data: 'no_trx', search: true, name: 'no_trx'},
+        { data: 'user', search: true, name: 'user'},
+        { data: 'total_fixed', search: true, name: 'total_fixed'},
+        { data: 'total_trx', search: true, name: 'total_trx'},
+        { data: 'biaya_adm', search: true, name: 'biaya_adm'},
+        { data: 'kode_unique', search: true, name: 'kode_unique'},
+        { data: 'tanggal', search: true, name: 'tanggal'},
+        { data: 'action', name: 'action'},
+      ]
+    })
+  })
+
+  function konfirmasi_topup(no_trx) {
+    $.post(`{{ route('admin.iorpay.konfirmasi-topup') }}`, {
+      _token: '{{ csrf_token() }}',
+      no_trx: no_trx
+    }, function(response) {
+      console.log(response)
+      if(response.status && !response.error) {
+        $.toast({
+            heading: 'Success',
+            text: response.message,
+            showHideTransition: 'slide',
+            position: 'top-right',
+            icon: 'success'
+        });
+        table.ajax.reload();
+      }else {
+        $.toast({
+            heading: 'Error',
+            text: response.message,
+            showHideTransition: 'slide',
+            position: 'top-right',
+            icon: 'error'
+        });
+      }
+    })
+  }
+</script>
 @endsection

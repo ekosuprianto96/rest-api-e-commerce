@@ -9,7 +9,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Iorsel.com | Login Admin</title>
+    <title>{{ config('app.name') }} | Login Admin</title>
 
     {{-- Remix Icon --}}
     <link rel="stylesheet" href="{{ asset('assets/landing/remix-icon/remixicon.css') }}">
@@ -58,8 +58,9 @@
                         <!-- Nested Row within Card Body -->
                         <div class="row">
                             <div class="col-lg-6 d-none d-lg-block">
-                                <div class="d-flex w-100 h-100 justify-content-center align-items-center">
-                                    {{-- <img width="200" src="{{ asset('assets/landing/images') }}/{{ $logo }}" alt="{{ $logo }}"> --}}
+                                <div class="d-flex w-100 h-100 justify-content-center align-items-center flex-column">
+                                    <img width="200" src="{{ config('app.logo') }}" alt="{{ config('app.name') }}">
+                                    <span class="d-block" style="font-size: 1.5em;font-weight: bold;">Selamat Datang Di {{ config('app.name') }}</span>
                                 </div>
                             </div>
                             <div class="col-lg-6">

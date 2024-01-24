@@ -63,7 +63,7 @@
   </table>
   <div style="margin: 10px 0px;padding: 10px 8px;text-align: center;background-color: rgb(207, 207, 207);width: 100%;">
     <center>
-      <p style="width: 100%;text-align: center;">&copy;Copy Right <a href="{{ env('URL_WEBSITE') }}">iorsel.com</a> {{ date('Y') }}</p>
+      <p style="width: 100%;text-align: center;">&copy;Copy Right <a href="{{ env('URL_WEBSITE') }}">{{ config('app.name') }}</a> {{ date('Y') }}</p>
     </center>
   </div>
 </body>

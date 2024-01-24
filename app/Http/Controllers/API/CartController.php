@@ -20,6 +20,7 @@ class CartController extends Controller
                         ->join('kategori', 'produk.kode_kategori', 'kategori.kode_kategori')
                         ->join('detail_toko', 'produk.kode_toko', 'detail_toko.kode_toko')
                         ->where('carts.uuid_user', Auth::user()->uuid)
+                        ->where('produk.an', 1)
                         ->groupBy('produk.kode_produk')
                         ->get();
             foreach($cart as $c) {
@@ -27,7 +28,7 @@ class CartController extends Controller
                     'kode_produk' => $c->kode_produk,
                     'an' => 1
                 ])->first();
-                $c->harga = $produk->getHargaDiskon($produk);
+                $c->harga = $produk->getHargaDiskon();
                 $wishlist = Wishlist::where([
                     'kode_produk' => $c->kode_produk,
                     'uuid_user' => auth()->guard('api')->user()->uuid

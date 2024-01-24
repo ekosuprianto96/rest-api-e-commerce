@@ -6,16 +6,20 @@
     "license": "MIT",
     "require": {
         "php": "^8.0.2",
+        "arielmejiadev/larapex-charts": "^6.0",
+        "fruitcake/laravel-cors": "^3.0",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^9.19",
         "laravel/sanctum": "^3.0",
+        "laravel/socialite": "^5.11",
         "laravel/tinker": "^2.7",
         "midtrans/midtrans-php": "^2.5",
         "php-open-source-saver/jwt-auth": "1.4.2",
         "predis/predis": "^2.2",
         "pusher/pusher-php-server": "^7.2",
         "realrashid/sweet-alert": "^7.1",
-        "santigarcor/laratrust": "^7.2"
+        "santigarcor/laratrust": "^7.2",
+        "yajra/laravel-datatables": "^9.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
@@ -31,7 +35,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Helper/Helper.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
