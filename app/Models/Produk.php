@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Cache;
 
 class Produk extends Model
 {
@@ -76,6 +78,12 @@ class Produk extends Model
         );
     }
 
+    public function waktuProses()
+    {
+        $waktuProses = WaktuProsesOrder::where('kode', $this->waktu_proses)->first();
+        return $waktuProses->nama;
+    }
+
     public function form()
     {
         return $this->hasMany(ListFormProduk::class, 'kode_produk', 'kode_produk');
@@ -91,6 +99,48 @@ class Produk extends Model
     public function images()
     {
         return $this->hasMany(ImageProduk::class, 'kode_produk', 'kode_produk');
+    }
+
+    public static function getProdukTerlaris()
+    {
+        $produkTerlaris = Cache::tags('produkTerlaris')->rememberForever('produkTerlaris', function () {
+            return Produk::select('produk.*', DB::raw('SUM(detail_orders.quantity) as total_penjualan'))
+                ->leftJoin('detail_orders', 'detail_orders.kode_produk', 'produk.kode_produk')
+                ->where([
+                    'produk.an' => 1,
+                    'produk.status_confirm' => 1
+                ])
+                ->groupBy('produk.kode_produk')
+                ->orderBy('total_penjualan')
+                ->take(20)->get();
+        });
+        if (@count($produkTerlaris) > 0) {
+            foreach ($produkTerlaris as $pr) {
+                $produk = Produk::where('kode_produk', $pr->kode_produk)->first();
+                $pr->detail_harga = $produk->getHargaDiskon($produk);
+            }
+        }
+        return $produkTerlaris;
+    }
+
+    public static function getProdukSerupa(Produk $produk)
+    {
+        $produkSerupa = Cache::tags('produkSerupa')->rememberForever('produkSerupa', function () use ($produk) {
+            return Produk::whereRaw("kode_kategori = '" . $produk->kategori->kode_kategori . "' AND (kode_produk != '" . $produk->kode_produk . "') ")
+                ->where([
+                    'an' => 1,
+                    'status_confirm' => 1
+                ])
+                ->take(20)->get();
+        });
+
+        if (@count($produkSerupa) > 0) {
+            foreach ($produkSerupa as $pr) {
+                $produk = Produk::where('kode_produk', $pr->kode_produk)->first();
+                $pr->detail_harga = $produk->getHargaDiskon($produk);
+            }
+        }
+        return $produkSerupa;
     }
     // public function cart() {
     //     return $this->belongsToMany(Cart::class, 'cart_produk', 'kode_produk', 'kode_cart');

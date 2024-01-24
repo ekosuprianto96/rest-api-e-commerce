@@ -31,28 +31,48 @@ class DetailToko extends Model
         });
     }
 
-    public function user() {
+    public function user()
+    {
         return $this->belongsTo(User::class, 'uuid_user', 'uuid');
     }
 
-    public function produk() {
+    public function produk()
+    {
         return $this->hasMany(Produk::class, 'kode_toko', 'kode_toko');
     }
 
-    public function message() {
+    public function message()
+    {
         return $this->hasMany(Message::class, 'uuid_user', 'uuid_user');
     }
 
-    public function saldo() {
+    public function saldo()
+    {
         return $this->hasOne(SaldoToko::class, 'kode_toko', 'kode_toko');
     }
 
-    public function saldo_refaund() {
+    public function saldo_refaund()
+    {
         return $this->hasOne(SaldoRefaund::class, 'kode_toko', 'kode_toko');
     }
 
-    public function order() {
+    public function order()
+    {
         return $this->hasMany(DetailOrder::class, 'kode_toko', 'kode_toko');
     }
 
+    public function getProdukToko()
+    {
+        $produkToko = $this->produk()->where([
+            'an' => 1,
+            'status_confirm' => 1
+        ])->get();
+        if (@count($produkToko) > 0) {
+            foreach ($produkToko as $pr) {
+                $produk = Produk::where('kode_produk', $pr->kode_produk)->first();
+                $pr->detail_harga = $produkToko->detail_harga = $produk->getHargaDiskon($produk);
+            }
+        }
+        return $produkToko;
+    }
 }

@@ -4,7 +4,7 @@
     {{-- End Logo --}}
     
     {{-- Menu Dashboard --}}
-    <x-admin.menu.sub-menu :active-class="$title == 'Dashboard' ? 'active' : ''" :route="route('admin.dashboard')" :menu-name="'Dashboard'" :icon="'fas fa-fw fa-tachometer-alt'"></x-admin.menu.sub-menu>
+    <x-admin.menu.sub-menu :active-class="$title == 'Dashboard' ? 'active' : ''" :route="route('admin.dashboard', Auth::user()->uuid)" :menu-name="'Dashboard'" :icon="'fas fa-fw fa-tachometer-alt'"></x-admin.menu.sub-menu>
     <hr class="sidebar-divider">
     @foreach($array_menu as $key => $value)
         <li class="nav-item">

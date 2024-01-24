@@ -39,6 +39,7 @@ class ComposerStaticInit4fca8227c6053a448ff29516f5ee2516
         'ec07570ca5a812141189b1fa81503674' => __DIR__ . '/..' . '/phpunit/phpunit/src/Framework/Assert/Functions.php',
         '6b34c85f7b1ad6faa15aa12109e030f2' => __DIR__ . '/..' . '/realrashid/sweet-alert/src/functions.php',
         '320163ac6b93aebe3dc25b60a0533d56' => __DIR__ . '/..' . '/spatie/laravel-ignition/src/helpers.php',
+        '2678778370ecbdd62f0e4fc70eb072ea' => __DIR__ . '/../..' . '/app/Helper/Helper.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -630,7 +631,6 @@ class ComposerStaticInit4fca8227c6053a448ff29516f5ee2516
         'App\\Events\\TestLagi' => __DIR__ . '/../..' . '/app/Events/TestLagi.php',
         'App\\Events\\TestMessage' => __DIR__ . '/../..' . '/app/Events/TestMessage.php',
         'App\\Exceptions\\Handler' => __DIR__ . '/../..' . '/app/Exceptions/Handler.php',
-        'App\\Helper\\Helper' => __DIR__ . '/../..' . '/app/Helper/Helper.php',
         'App\\Http\\Controllers\\API\\AuthenticateController' => __DIR__ . '/../..' . '/app/Http/Controllers/API/AuthenticateController.php',
         'App\\Http\\Controllers\\API\\BannerController' => __DIR__ . '/../..' . '/app/Http/Controllers/API/BannerController.php',
         'App\\Http\\Controllers\\API\\CartController' => __DIR__ . '/../..' . '/app/Http/Controllers/API/CartController.php',
@@ -681,6 +681,8 @@ class ComposerStaticInit4fca8227c6053a448ff29516f5ee2516
         'App\\Http\\Controllers\\Dashboard\\DashboardController' => __DIR__ . '/../..' . '/app/Http/Controllers/Dashboard/DashboardController.php',
         'App\\Http\\Controllers\\DetailTokoController' => __DIR__ . '/../..' . '/app/Http/Controllers/DetailTokoController.php',
         'App\\Http\\Controllers\\DownloadController' => __DIR__ . '/../..' . '/app/Http/Controllers/DownloadController.php',
+        'App\\Http\\Controllers\\Frontend\\HomeController' => __DIR__ . '/../..' . '/app/Http/Controllers/Frontend/HomeController.php',
+        'App\\Http\\Controllers\\Frontend\\Produk\\ProdukController' => __DIR__ . '/../..' . '/app/Http/Controllers/Frontend/Produk/ProdukController.php',
         'App\\Http\\Controllers\\ReportOrderController' => __DIR__ . '/../..' . '/app/Http/Controllers/ReportOrderController.php',
         'App\\Http\\Kernel' => __DIR__ . '/../..' . '/app/Http/Kernel.php',
         'App\\Http\\Middleware\\Authenticate' => __DIR__ . '/../..' . '/app/Http/Middleware/Authenticate.php',
@@ -690,6 +692,7 @@ class ComposerStaticInit4fca8227c6053a448ff29516f5ee2516
         'App\\Http\\Middleware\\TrimStrings' => __DIR__ . '/../..' . '/app/Http/Middleware/TrimStrings.php',
         'App\\Http\\Middleware\\TrustHosts' => __DIR__ . '/../..' . '/app/Http/Middleware/TrustHosts.php',
         'App\\Http\\Middleware\\TrustProxies' => __DIR__ . '/../..' . '/app/Http/Middleware/TrustProxies.php',
+        'App\\Http\\Middleware\\UserMiddleware' => __DIR__ . '/../..' . '/app/Http/Middleware/UserMiddleware.php',
         'App\\Http\\Middleware\\ValidateSignature' => __DIR__ . '/../..' . '/app/Http/Middleware/ValidateSignature.php',
         'App\\Http\\Middleware\\VerifyCsrfToken' => __DIR__ . '/../..' . '/app/Http/Middleware/VerifyCsrfToken.php',
         'App\\Jobs\\AutoBlockToko' => __DIR__ . '/../..' . '/app/Jobs/AutoBlockToko.php',
@@ -769,6 +772,10 @@ class ComposerStaticInit4fca8227c6053a448ff29516f5ee2516
         'App\\Providers\\RouteServiceProvider' => __DIR__ . '/../..' . '/app/Providers/RouteServiceProvider.php',
         'App\\View\\Components\\MenuSidebar' => __DIR__ . '/../..' . '/app/View/Components/MenuSidebar.php',
         'App\\View\\Components\\Navbar' => __DIR__ . '/../..' . '/app/View/Components/Navbar.php',
+        'App\\View\\Components\\frontend\\Banners' => __DIR__ . '/../..' . '/app/View/Components/frontend/Banners.php',
+        'App\\View\\Components\\frontend\\layouts\\Footer' => __DIR__ . '/../..' . '/app/View/Components/frontend/layouts/Footer.php',
+        'App\\View\\Components\\frontend\\layouts\\container' => __DIR__ . '/../..' . '/app/View/Components/frontend/layouts/container.php',
+        'App\\View\\Components\\frontend\\produk\\cardProduk' => __DIR__ . '/../..' . '/app/View/Components/frontend/produk/cardProduk.php',
         'ArielMejiaDev\\LarapexCharts\\AreaChart' => __DIR__ . '/..' . '/arielmejiadev/larapex-charts/src/AreaChart.php',
         'ArielMejiaDev\\LarapexCharts\\BarChart' => __DIR__ . '/..' . '/arielmejiadev/larapex-charts/src/BarChart.php',
         'ArielMejiaDev\\LarapexCharts\\Console\\ChartMakeCommand' => __DIR__ . '/..' . '/arielmejiadev/larapex-charts/src/Console/ChartMakeCommand.php',

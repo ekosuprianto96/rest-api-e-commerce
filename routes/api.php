@@ -149,6 +149,8 @@ Route::prefix('user/')->name('user.')->middleware('auth:api')->group(function ()
         Route::post('produk/destroy', [DetailTokoController::class, 'destroy_produk'])->name('destroy-produk');
         Route::post('produk/edit', [DetailTokoController::class, 'edit'])->name('edit-produk');
         Route::post('produk/update', [DetailTokoController::class, 'produk_update'])->name('update-produk');
+        Route::post('produk/destroy-image', [DetailTokoController::class, 'destroyImage'])->name('destroy-image');
+        Route::post('produk/store-image', [DetailTokoController::class, 'storeImageProduk'])->name('store-image');
         Route::get('order/{kode_toko}', [DetailTokoController::class, 'order'])->name('order');
         Route::post('update', [DetailTokoController::class, 'update'])->name('update');
         Route::post('upload-image', [DetailTokoController::class, 'upload_image'])->name('upload-image');

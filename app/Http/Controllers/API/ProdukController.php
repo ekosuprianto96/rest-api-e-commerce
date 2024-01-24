@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\API\Handle\ErrorController;
+use App\Http\Controllers\DetailTokoController;
 use App\Models\ImageProduk;
 
 class ProdukController extends Controller
@@ -163,6 +164,8 @@ class ProdukController extends Controller
                 $produk->total_produk_toko = $produk->toko->produk->count();
                 $produk->total_terjual = $produk->order->count();
                 $produk->total_terjual_toko = $produk->toko->order->count();
+                $komisi = (float) ((intval($produk->komisi_referal) / 100) * $produk->getHargaFixed());
+                $produk->komisi_referal = number_format($komisi, 0);
                 $produk->wishlist = 0;
                 if (auth()->guard('api')->user()) {
                     $wishlist = Wishlist::where([
@@ -253,7 +256,7 @@ class ProdukController extends Controller
             'deskripsi_produk' => 'required',
             'harga' => 'required|numeric|min:1000',
             'file' => ($request->hasFile('file') ? 'mimes:txt,pdf,zip|max:2000000' : ''),
-            'image' => 'mimes:png,jpeg,jpg,svg,webp|max:2000000',
+            'images.*' => 'mimes:png,jpeg,jpg,svg,webp|max:2000000',
             'total_komisi' => ($request['status_referal'] > 0 ? 'required|min:1|max:100' : ''),
             'list_form' => (isset($request['list_form']) ? 'required' : '')
         ]);
@@ -298,15 +301,9 @@ class ProdukController extends Controller
 
                 if ($request->hasFile('images')) {
                     foreach ($request->file('images') as $image) {
-                        $fileName = time() . '.' . $image->getClientOriginalExtension();
-                        $path = asset('produk/image/' . Auth::user()->toko->kode_toko . '/' . $fileName);
-                        $image->move(public_path('produk/image/' . Auth::user()->toko->kode_toko), $fileName);
-                        ImageProduk::create([
-                            'uuid' => Str::uuid(),
-                            'url' => $path,
-                            'kode_produk' => $produk->kode_produk,
-                            'an' => 1
-                        ]);
+                        $request->merge(['image' => $image]);
+                        $storeIamge = new DetailTokoController();
+                        $storeIamge->storeImageProduk($request);
                     }
                 }
                 if ($request->input('list_form')) {
