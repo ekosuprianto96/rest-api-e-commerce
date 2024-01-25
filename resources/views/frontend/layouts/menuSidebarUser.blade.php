@@ -17,49 +17,49 @@
       </div>
     </div>
     <div v-if="user.detail_toko.status_toko == 'APPROVED'" class="w-full py-2 lg:block hidden">
-      <a href="" class="px-6 py-2 text-sm text-center bg-blue-600 rounded-md w-full block text-slate-50">Upload Produk</a>
+      <a href="{{ route('user.dashboard', $user->username) }}" class="px-6 py-2 text-sm text-center bg-blue-600 rounded-md w-full block text-slate-50">Dasboard</a>
     </div>
     <ul class="h-max pb-3 border-b-2 lg:block hidden">
       <li class="mb-2">
-        <a href="" class="py-2 hover:bg-blue-500 flex items-center relative hover:text-slate-50 rounded-lg px-2 text-sm">
+        <a href="{{ route('user.linggapay') }}" class="py-2 flex items-center relative {{ isActiveMenu('user.linggapay') }} rounded-lg px-2 text-sm">
           <i class="ri-wallet-3-fill me-1"></i> LinggaPay 
           <span class="absolute bg-green-400 text-slate-50 rounded-lg px-2 py-1 right-2 text-xs">Aktif</span>
         </a>
       </li>
-      <li class="mb-2"><a href="{{ route('user.keranjang', getUserName()) }}" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm">
+      <li class="mb-2"><a href="{{ route('user.keranjang', getUserName()) }}" class="py-2 {{ isActiveMenu('user.keranjang') }} rounded-lg px-2 block text-sm">
         <i class="ri-shopping-cart-2-fill"></i> Keranjang</a>
       </li>
-      <li class="mb-2"><a href="" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm">
+      <li class="mb-2"><a href="{{ route('user.wishlist', $user->username) }}" class="py-2 {{ isActiveMenu('user.wishlist') }} rounded-lg px-2 block text-sm">
         <i class="ri-heart-fill"></i> WishList</a></li>
-      <li class="mb-2"><a href="" class="py-2 relative hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm">
+      <li class="mb-2"><a href="" class="py-2 relative {{ isActiveMenu('') }} rounded-lg px-2 block text-sm">
         <i class="ri-percent-fill"></i> Komisi Referal</a></li>
-      <li class="mb-2"><a href="" class="py-2 relative hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm">
+      <li class="mb-2"><a href="" class="py-2 relative {{ isActiveMenu('') }} rounded-lg px-2 block text-sm">
         <i class="ri-chat-4-fill"></i> Pesan <span class="absolute right-2 rounded-full w-[20px] h-[20px] flex justify-center items-center text-[0.6em] top-[25%] bg-red-500 text-slate-50">{{ 0 }}</span></a></li>
-      <li class="mb-2"><a href="" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm">
+      <li class="mb-2"><a href="" class="py-2 {{ isActiveMenu('') }} rounded-lg px-2 block text-sm">
         <i class="ri-survey-fill"></i> Daftar Transaksi</a></li>
-      <li class="mb-2"><a href="" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm relative">
+      <li class="mb-2"><a href="" class="py-2 {{ isActiveMenu('') }} rounded-lg px-2 block text-sm relative">
         <i class="ri-survey-fill"></i> Daftar Pesanan</a></li>
-      <li class="mb-2"><a href="" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm">
+      <li class="mb-2"><a href="" class="py-2 {{ isActiveMenu('') }} rounded-lg px-2 block text-sm">
         <i class="ri-user-settings-fill"></i> Pengaturan Akun</a></li>
-      <li class="mb-2"><a href="" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm">
+      <li class="mb-2"><a href="" class="py-2 {{ isActiveMenu('') }} rounded-lg px-2 block text-sm">
         <i class="ri-user-settings-fill"></i> Pemberitahuan</a></li>
     </ul>
     {{-- <ul :class="user.detail_toko.status_toko == 'APPROVED' ? '' : 'pb-3 mt-3'" class="h-max lg:block hidden">
-      <li v-if="user.detail_toko.status_toko == 'PENDING' || user.detail_toko.status_toko == ''"><a :to="(user.detail_toko.status_toko == 'PENDING' || user.detail_toko.status_toko == 'REJECT') ? '' : getRoute('buka-toko')" :class="(user.detail_toko.status_toko == 'PENDING' || user.detail_toko.status_toko == 'REJECT') ? 'hover:cursor-not-allowed' : ''" type="button" class="py-2 hover:bg-blue-500 hover:text-slate-50 w-full flex items-center relative rounded-lg px-2 text-sm text-start">
+      <li v-if="user.detail_toko.status_toko == 'PENDING' || user.detail_toko.status_toko == ''"><a :to="(user.detail_toko.status_toko == 'PENDING' || user.detail_toko.status_toko == 'REJECT') ? '' : getRoute('buka-toko')" :class="(user.detail_toko.status_toko == 'PENDING' || user.detail_toko.status_toko == 'REJECT') ? 'hover:cursor-not-allowed' : ''" type="button" class="py-2 {{ isActiveMenu() }} w-full flex items-center relative rounded-lg px-2 text-sm text-start">
           <i class="ri-store-2-fill me-1"></i> Buka Toko <button v-if="user.detail_toko.status_toko == 'PENDING'" type="button" class="absolute right-2 text-xs">PENDING</button></a></li>
-      <!-- <li class="mb-2"><a class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm" :to="getRoute('dashboard')">
+      <!-- <li class="mb-2"><a class="py-2 {{ isActiveMenu() }} rounded-lg px-2 block text-sm" :to="getRoute('dashboard')">
         <i class="ri-bank-card-fill"></i> Pembayaran</a></li> -->
     </ul> --}}
     {{-- <ul v-if="user.detail_toko.status_toko == 'APPROVED'" class="h-max lg:block hidden pb-3 mt-3">
-      <li class="mb-2"><a :class="$route.name == 'order-toko' ? 'bg-blue-500 text-slate-50' : ''" class="py-2 relative hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm" :to="getRoute('order-toko')">
+      <li class="mb-2"><a :class="$route.name == 'order-toko' ? 'bg-blue-500 text-slate-50' : ''" class="py-2 relative {{ isActiveMenu() }} rounded-lg px-2 block text-sm" :to="getRoute('order-toko')">
         <i class="ri-user-settings-fill"></i> Daftar Order <span v-if="notification.order_toko > 0" class="absolute right-2 rounded-full w-[20px] h-[20px] flex justify-center items-center text-[0.6em] top-[25%] bg-red-500 text-slate-50">{{ notification.order_toko }}</span></a></li>
-      <li class="mb-2"><a :class="$route.name == 'daftar-produk' ? 'bg-blue-500 text-slate-50' : ''" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm" :to="getRoute('daftar-produk')">
+      <li class="mb-2"><a :class="$route.name == 'daftar-produk' ? 'bg-blue-500 text-slate-50' : ''" class="py-2 {{ isActiveMenu() }} rounded-lg px-2 block text-sm" :to="getRoute('daftar-produk')">
         <i class="ri-user-settings-fill"></i> Daftar Produk</a></li>
-      <li class="mb-2"><a :class="$route.name == 'detail-toko' ? 'bg-blue-500 text-slate-50' : ''" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm" :to="getRoute('detail-toko')">
+      <li class="mb-2"><a :class="$route.name == 'detail-toko' ? 'bg-blue-500 text-slate-50' : ''" class="py-2 {{ isActiveMenu() }} rounded-lg px-2 block text-sm" :to="getRoute('detail-toko')">
         <i class="ri-store-2-fill"></i> Setting Toko</a></li>
-      <!-- <li class="mb-2"><a class="py-2 relative hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm" :to="getRoute('notifikasi-toko')">
+      <!-- <li class="mb-2"><a class="py-2 relative {{ isActiveMenu() }} rounded-lg px-2 block text-sm" :to="getRoute('notifikasi-toko')">
         <i class="ri-notification-3-fill"></i> Pesan Toko <span v-if="notification.pesan_toko > 0" class="absolute right-2 rounded-full w-[20px] h-[20px] flex justify-center items-center text-[0.6em] top-[25%] bg-red-500 text-slate-50">{{ notification.pesan_toko }}</span></a></li> -->
-      <!-- <li class="mb-2"><a class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm" :to="getRoute('dashboard')">
+      <!-- <li class="mb-2"><a class="py-2 {{ isActiveMenu() }} rounded-lg px-2 block text-sm" :to="getRoute('dashboard')">
         <i class="ri-bank-card-fill"></i> Atur Pembayaran</a></li> -->
     </ul> --}}
 </div>

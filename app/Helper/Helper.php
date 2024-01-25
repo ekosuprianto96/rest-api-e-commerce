@@ -1,9 +1,12 @@
 <?php
 
 use App\Models\Produk;
+use App\Models\SettingGateway;
 use App\Models\Wishlist;
 use App\Models\SettingWebsite;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Route;
 
 if (!function_exists('getSettings')) {
   function getSettings($key)
@@ -39,5 +42,57 @@ if (!function_exists('getUserName')) {
     if (Auth::check()) {
       return Auth::user()->username;
     }
+  }
+}
+if (!function_exists('isActiveMenu')) {
+  function isActiveMenu($route, $output = 'bg-blue-500 text-slate-50')
+  {
+    if (Route::currentRouteName() == $route) return $output;
+
+    return 'hover:bg-blue-500 hover:text-slate-50';
+  }
+}
+if (!function_exists('getSettingsGateway')) {
+  function getSettingsGateway($name, $key = null)
+  {
+    $settings = getOrUpdateCache('settingGateway', function () use ($name) {
+      return SettingGateway::where('name', $name)->first();
+    }, 2400);
+
+    if (isset($settings)) {
+      if (empty($key)) {
+        return $settings;
+      }
+      return $settings[$key];
+    }
+    return null;
+  }
+}
+if (!function_exists('getOrUpdateCache')) {
+  function getOrUpdateCache($key, $databaseQuery, $minutes = null)
+  {
+    $cachedData = Cache::tags($key)->get($key);
+
+    if ($cachedData === null) {
+      // Data tidak ada di cache, ambil dari database
+      $databaseData = $databaseQuery();
+
+      // Simpan data ke cache
+      $data = Cache::tags($key)->rememberForever($key, function () use ($databaseData) {
+        return $databaseData;
+      });
+
+      return $data;
+    }
+
+    // Data ada di cache, cek apakah ada perbedaan dengan data di database
+    $databaseData = $databaseQuery();
+
+    if ($cachedData != $databaseData) {
+      // Jika ada perbedaan, perbarui data di cache
+      Cache::tags($key)->put($key, $databaseData, $minutes);
+    }
+
+    return $cachedData;
   }
 }
