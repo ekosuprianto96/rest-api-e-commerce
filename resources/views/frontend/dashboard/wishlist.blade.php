@@ -1,4 +1,4 @@
-@extends('frontend.layouts.index', ['title' => 'Daftar Produk Di Keranjang'])
+@extends('frontend.layouts.index', ['title' => 'Daftar Produk Wishlist'])
 
 @section('content')
     <x-frontend.layouts.container>
@@ -10,7 +10,7 @@
                 <div class="lg:col-span-9 col-span-12">
                     <div class="rounded-lg px-2 py-3 shadow-lg bg-white">
                         <div class="px-2">
-                            @include('frontend.dashboard.contents.content-cart', ['title' => 'Daftar Produk', 'carts' => $carts])
+                            @include('frontend.dashboard.contents.content-wishlist', ['title' => 'Daftar Wishlist Kamu', 'wishlist' => $wishlist])
                         </div>
                     </div>
                 </div>

@@ -14,6 +14,7 @@
         background-color: rgba(189, 189, 189, 0);
         width: 2px;
     }
+
 </style>
 <header class="bg-gradient-to-br max-w-screen shadow-lg from-blue-600 sticky top-0 z-[50] to-blue-900 py-2 lg:py-3">
     <div class="px-2 w-full lg:px-28">
@@ -50,9 +51,9 @@
             <div class="col-span-3">
                 <div class="rounded-lg bg-slate-50 py-2 w-full overflow-hidden flex items-center h-[40px]">
                     <div class="w-[25%] px-2 h-full flex items-center justify-center border-r-2">
-                    <span id="button-drop" class="text-blue-700 whitespace-nowrap block text-sm hover:bg-blue-300 p-1 hover:cursor-pointer h-max rounded-lg">
+                    <span data-target="dropDownKategori" id="button-drop" class="text-blue-700 whitespace-nowrap block text-sm hover:bg-blue-300 p-1 hover:cursor-pointer h-max rounded-lg">
                         Semua Kategori
-                        <i class="ri-arrow-down-s-line ms-2"></i>
+                        <i data-target="dropDownKategori" class="ri-arrow-down-s-line ms-2"></i>
                     </span>
                     </div>
                     <div class="w-[80%] relative flex items-center">
@@ -86,13 +87,13 @@
                 </div>
             </div>
         </div>
-        {{-- <div v-if="show_kategori" class="border absolute top-[95%] left-[25%] shadow-lg w-[200px] rounded-lg p-4 bg-slate-50 z-[9999999999999999999999999999]">
+        <div id="dropDownKategori" style="display: none" class="border transition-all absolute top-[85%] p-4 left-[25%] overflow-hidden shadow-lg w-[200px] rounded-lg bg-slate-50 z-[9999999999999999999999999999]">
             <ul class="text-sm">
                 @foreach(\App\Models\Kategori::all() as $key => $value)
                 <li class="py-1"><a href="" class="hover:text-blue-600 block">{{ $value->nama_kategori }}</a></li>
                 @endforeach
             </ul>
-        </div> --}}
+        </div>
 
         <!-- Navbar Mobile -->
         <div class="flex w-full items-center py-2 lg:hidden">

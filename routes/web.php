@@ -36,6 +36,7 @@ use App\Http\Controllers\Admin\Transaksi\Withdraw\TransaksiWithdrawController;
 use App\Http\Controllers\Frontend\Auth\LoginController as AuthLoginController;
 use App\Http\Controllers\Frontend\Dashboard\DashboardController as UserDashboardController;
 use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\Frontend\Linggapay\LinggapayController;
 use App\Http\Controllers\Frontend\Produk\ProdukController as FrontendProdukController;
 
 /*
@@ -68,6 +69,10 @@ Route::middleware(['auth'])->group(function () {
   Route::name('user.')->group(function () {
     Route::get('{username}/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
     Route::get('{username}/keranjang', [UserDashboardController::class, 'keranjang'])->name('keranjang');
+    Route::get('{username}/wishlist', [UserDashboardController::class, 'wishlist'])->name('wishlist');
+
+    // Route Linggapay
+    Route::get('linggapay', [LinggapayController::class, 'index'])->name('linggapay');
   });
 });
 
