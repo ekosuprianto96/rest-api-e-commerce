@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\Settings\SettingBannerController;
 use App\Http\Controllers\Admin\Transaksi\Topup\TransaksiTopupController;
 use App\Http\Controllers\Admin\Transaksi\Withdraw\TransaksiWithdrawController;
 use App\Http\Controllers\Frontend\Auth\LoginController as AuthLoginController;
+use App\Http\Controllers\Frontend\Cart\CartController;
 use App\Http\Controllers\Frontend\Dashboard\DashboardController as UserDashboardController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\Linggapay\LinggapayController;
@@ -73,6 +74,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Route Linggapay
     Route::get('linggapay', [LinggapayController::class, 'index'])->name('linggapay');
+
+    // Route Cart
+    Route::prefix('keranjang/')->name('keranjang.')->group(function() {
+      Route::post('store', [CartController::class, 'store'])->name('store');
+    });
   });
 });
 

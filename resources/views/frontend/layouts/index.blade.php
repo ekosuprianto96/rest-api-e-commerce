@@ -26,10 +26,36 @@
         }
       </style>
     @vite('resources/css/app.css')
+
+
+    @if (config('sweetalert.animation.enable'))
+        <link rel="stylesheet" href="{{ config('sweetalert.animatecss') }}">
+    @endif
+
+    @if (config('sweetalert.theme') != 'default')
+        <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-{{ config('sweetalert.theme') }}" rel="stylesheet">
+    @endif
+
+    @if (config('sweetalert.alwaysLoadJS') === false && config('sweetalert.neverLoadJS') === false)
+        <script src="{{ $cdn ?? asset('vendor/sweetalert/sweetalert.all.js') }}"></script>
+    @endif
 </head>
 <body class="bg-slate-100">
+
+    @php
+        if(Auth::check()) {
+            $user = Auth::user();
+            $totalCart = App\Models\Cart::where('uuid_user', $user->uuid)->count();
+            $totalChat = 0;
+        }else {
+            $totalCart = null;
+            $totalChat = null;
+        }
+    @endphp
+
     @include('sweetalert::alert')
-    @include('frontend.components.header.navbar')
+
+    @include('frontend.components.header.navbar', ['totalChat' => $totalChat, 'totalCart' => $totalCart])
 
     @yield('content')
 

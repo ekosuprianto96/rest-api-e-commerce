@@ -3,7 +3,7 @@
 @section('content')
     <x-frontend.layouts.container>
         <div class="detail-produk">
-            <div class="mb-3 rounded-lg shadow-lg gap-3 grid grid-cols-1 lg:grid-cols-2 w-full bg-white overflow-hidden rounded lg:p-8 lg:mt-8 mt-4 lg:py-8">
+            <div class="mb-3 rounded-lg shadow-lg gap-3 grid grid-cols-1 lg:grid-cols-2 w-full bg-white overflow-hidden lg:p-8 lg:mt-8 mt-4 lg:py-8">
                 <div v-if="produk && !skeleton">
                     <div style="background-image: url({{ @count($produk->images) > 0 ? $produk->images[0]->url : getSettings('logo') }})" class="w-full rounded-lg bg-center bg-cover h-[400px] bg-slate-400 max-h-[400px]">
                       
@@ -54,7 +54,11 @@
                     </button>
                   </div>
                   <div class="lg:py-4 py-2 mb-3">
-                    <button class="px-3 py-2 bg-blue-600 rounded-md w-full text-sm text-slate-50">Masukkan Ke Keranjang</button>
+                    @auth
+                      <button id="buttonAddCart" data-produk="{{ $produk->kode_produk }}" class="px-3 py-3 hover:bg-blue-400 bg-blue-600 rounded-md w-full text-sm text-slate-50">Masukkan Ke Keranjang</button>
+                    @else
+                      <a href="{{ route('login') }}" class="px-3 py-3 block text-center hover:bg-blue-400 bg-blue-600 rounded-md w-full text-sm text-slate-50">Masukkan Ke Keranjang</a>
+                    @endauth
                   </div>
                 </div>
               </div>
@@ -139,6 +143,6 @@
               </div>
         </div>
     </x-frontend.layouts.container>
-@endsection
 
-@include('frontend.layouts.script-produk-show')
+    @include('frontend.layouts.script-produk-show')
+@endsection

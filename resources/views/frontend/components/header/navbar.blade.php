@@ -69,7 +69,7 @@
                 <div class="{{ Auth::check() ? 'grid grid-cols-3 w-full gap-2' : 'flex justify-between items-center w-full gap-2' }}">
                     <a href="{{ Auth::check() ? '' : route('login') }}" class="bg-white w-max px-2 py-1 rounded-md relative">
                         <i class="ri-shopping-cart-fill text-blue-500"></i>
-                        <span class="w-[20px] h-[20px] text-[0.6em] text-slate-50 bg-red-500 rounded-full flex justify-center items-center absolute -top-2 -right-2">0</span>
+                        <span id="countCartDesktop" class="w-[20px] h-[20px] text-[0.6em] text-slate-50 bg-red-500 rounded-full flex justify-center items-center absolute -top-2 -right-2">{{ $totalCart ?? 0 }}</span>
                     </a>
                     <a href="{{ Auth::check() ? '' : route('login') }}" class="bg-white px-2 w-max py-1 rounded-md">
                         <i class="ri-heart-fill text-blue-500"></i>
@@ -112,11 +112,11 @@
                 @auth
                     <a href="" class="bg-white w-max px-2 py-1 rounded-md relative">
                         <i class="ri-shopping-cart-fill text-blue-500"></i>
-                        <span class="w-[20px] h-[20px] text-[0.6em] text-slate-50 bg-red-500 rounded-full flex justify-center items-center absolute -top-2 -right-2">0</span>
+                        <span id="countCartMobile" class="w-[20px] h-[20px] text-[0.6em] text-slate-50 bg-red-500 rounded-full flex justify-center items-center absolute -top-2 -right-2">{{ $totalCart ?? 0 }}</span>
                     </a>
                     <a href="" class="bg-white w-max px-2 py-1 rounded-md relative">
                         <i class="ri-chat-smile-2-fill text-blue-500"></i>
-                        <span class="w-[20px] h-[20px] text-[0.6em] text-slate-50 bg-red-500 rounded-full flex justify-center items-center absolute -top-2 -right-2">0</span>
+                        <span class="w-[20px] h-[20px] text-[0.6em] text-slate-50 bg-red-500 rounded-full flex justify-center items-center absolute -top-2 -right-2">{{ $totalChat ?? 0 }}</span>
                     </a>                    
                 @endauth
             </div>

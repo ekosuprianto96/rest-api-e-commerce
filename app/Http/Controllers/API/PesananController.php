@@ -26,7 +26,6 @@ class PesananController extends Controller
                 'uuid_user' => $request['uuid_user'],
                 'id' => $request['id']
             ])->first();
-
             $get_produk = Produk::where('kode_produk', $order_detail->kode_produk)->first();
             $harga_produk = $get_produk->getHargaDiskon($get_produk);
 
@@ -104,7 +103,6 @@ class PesananController extends Controller
                 'uuid_user' => Auth::user()->uuid,
                 'kode_produk' => $produk->kode_produk
             ])->first();
-
             $harga_produk = $produk->getHargaDiskon($produk);
             $order->nama_produk = $order->produk->nm_produk;
             $order->tanggal = $order->created_at->format('Y-m-d');

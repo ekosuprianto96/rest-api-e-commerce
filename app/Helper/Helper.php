@@ -96,3 +96,13 @@ if (!function_exists('getOrUpdateCache')) {
     return $cachedData;
   }
 }
+if (!function_exists('isCheckVar')) {
+  function isCheckVar($data = null, $key = null)
+  {
+    if(empty($data)) return null;
+
+    if(isset($key)) return $data[$key];
+
+    return $data;
+  }
+}

@@ -42,7 +42,7 @@
               <li class="border relative flex items-center mb-2 p-3 rounded-lg hover:cursor-pointer hover:bg-slate-100 hover:shadow-lg">
                 <input type="checkbox" class="me-2">
                 <label for="" class="font-bold hover:cursor-pointer">LinggaPay</label>
-                <span class="text-danger text-sm absolute right-4">Saldo : Rp. {{ $user->iorpay->saldo }}</span>
+                <span class="text-danger text-sm absolute right-4">Saldo : Rp. {{ number_format($user->iorpay->saldo, 0, 0, '.') }}</span>
               </li>
               <li class="border flex flex-col mb-2 p-3 rounded-lg hover:cursor-pointer hover:bg-slate-100 hover:shadow-lg">
                 <div>
