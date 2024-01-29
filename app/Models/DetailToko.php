@@ -40,7 +40,7 @@ class DetailToko extends Model
     }
 
     public function message() {
-        return $this->hasMany(Message::class, 'kode_toko', 'kode_toko');
+        return $this->hasMany(Message::class, 'uuid_user', 'uuid_user');
     }
 
     public function saldo() {

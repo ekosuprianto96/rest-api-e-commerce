@@ -40,4 +40,8 @@ class IorPay extends Model
     public function trx() {
         return $this->hasMany(TrxIorPay::class, 'kode_pay', 'kode_pay');
     }
+
+    public function trx_komisi() {
+        return $this->hasMany(TransaksiKomisiReferal::class, 'kode_pay', 'kode_pay');
+    }
 }

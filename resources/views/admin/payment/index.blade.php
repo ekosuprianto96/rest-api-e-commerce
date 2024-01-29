@@ -17,7 +17,7 @@
     <div class="card">
       <div class="card-body">
         <div class="table-responsive">
-          <table class="table table-striped">
+          <table class="table table-striped w-100" id="table">
             <thead>
               <tr>
                 <th>#</th>
@@ -30,44 +30,67 @@
                 <th class="text-center">Action</th>
               </tr>
             </thead>
-            <tbody>
-              @if($order->count() > 0) 
-                @foreach($order as $key => $value)
-                  <tr>
-                    <td>
-                      {{ $order->firstItem() + $key }}
-                    </td>
-                    <td>{{ $value->no_order }}</td>
-                    <td>{{ $value->user->full_name }}</td>
-                    <td>{{ $value->detail->count() }}</td>
-                    <td>Rp. {{ number_format($value->total_biaya, 2) }}</td>
-                    <td>Rp. {{ number_format($value->total_potongan, 2) }}</td>
-                    <td>{{ $value->kode_unique }}</td>
-                    <td>
-                      <div class="d-flex align-items-center justify-content-center" style="gap: 7px;">
-                        <a href="{{ route('admin.payment.detail', $value->no_order) }}" class="btn btn-sm btn-primary text-nowrap" style="font-size: 0.8em"><i class="fa fa-eye"></i> Detail</a>
-                        <form class="m-0" action="{{ route('admin.payment.konfirmasi', $value->no_order) }}" method="POST">
-                          @method('PUT')
-                          @csrf
-                          <button type="submit" class="btn btn-sm btn-success text-nowrap" style="font-size: 0.8em"><i class="ri-checkbox-circle-fill"></i> Konfirmasi</button>
-                        </form>
-                      </div>
-                    </td>
-                  </tr>
-                @endforeach
-              @else 
-                  <tr>
-                    <td colspan="11" align="center" class="p-4">Tidak Ada Data</td>
-                  </tr>
-              @endif
-            </tbody>
-            <tfoot>
-              {{ $order->links() }}
-            </tfoot>
           </table>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  $(function() {
+    table = $('#table').DataTable({
+      processing: true,
+      serverSide: true,
+      paginate: true,
+      ajax: {
+        method: 'POST',
+        url: '{{ route("admin.payment.konfirmasi-data") }}',
+        data: function(d) {
+          d._token = '{{ csrf_token() }}';
+        }
+      },
+      columns: [
+        { data: '#', 
+            render: function(data, type, row, meta) {
+              return meta.row + meta.settings._iDisplayStart + 1;
+        }},
+        { data: 'no_order', search: true, name: 'no_order'},
+        { data: 'customer', search: true, name: 'customer'},
+        { data: 'total_produk', search: true, name: 'total_produk'},
+        { data: 'total_biaya', search: true, name: 'total_biaya'},
+        { data: 'total_potongan', search: true, name: 'total_potongan'},
+        { data: 'kode_unique', search: true, name: 'kode_unique'},
+        { data: 'action', name: 'action'},
+      ]
+    })
+  })
+
+  function konfirmasi_payment(no_order) {
+    $.post(`{{ route("admin.payment.konfirmasi") }}`, {
+      _token: '{{ csrf_token() }}',
+      no_order: no_order
+    }, function(response) {
+      console.log(response)
+      if(response.status && !response.error) {
+        $.toast({
+            heading: 'Success',
+            text: response.message,
+            showHideTransition: 'slide',
+            position: 'top-right',
+            icon: 'success'
+        });
+        table.ajax.reload();
+      }else {
+        $.toast({
+            heading: 'Error',
+            text: response.message,
+            showHideTransition: 'slide',
+            position: 'top-right',
+            icon: 'error'
+        });
+      }
+    })
+  }
+</script>
 @endsection

@@ -20,14 +20,14 @@ class WishListController extends Controller
                         ->join('kategori', 'produk.kode_kategori', 'kategori.kode_kategori')
                         ->join('detail_toko', 'produk.kode_toko', 'detail_toko.kode_toko')
                         ->where('wishlists.uuid_user', Auth::user()->uuid)
+                        ->where('produk.an', 1)
                         ->groupBy('produk.kode_produk')
                         ->get();
             foreach($wishlist as $c) {
                 $produk = Produk::with(['kategori', 'toko'])->where([
-                    'kode_produk' => $c->kode_produk,
-                    'an' => 1
+                    'kode_produk' => $c->kode_produk
                 ])->first();
-                $c->harga = $produk->getHargaDiskon($produk);
+                $c->harga = $produk->getHargaDiskon();
                 $c->form = $produk->form;
             }
             return response()->json([

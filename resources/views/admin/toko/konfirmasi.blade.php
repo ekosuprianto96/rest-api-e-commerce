@@ -11,70 +11,84 @@
 @section('content')
 <div id="content" class="py-4">
   <div class="container-fluid">
-    <h1 style="font-size: 1.5em">Daftar Toko</h1>
+    <h1 style="font-size: 1.5em">Daftar Konfirmasi Toko</h1>
     <div class="card">
       <div class="card-body">
         <div class="table-responsive">
-          <table class="table table-striped">
+          <table class="table table-striped w-100" id="table">
             <thead>
               <tr>
                 <th>#</th>
-                <th>Image</th>
                 <th>Nama Toko</th>
                 <th>Nama Pemilik</th>
                 <th>No Hape</th>
                 <th>Alamat</th>
                 <th>Status</th>
+                <th>Tanggal</th>
                 <th class="text-center">Action</th>
               </tr>
             </thead>
-            <tbody>
-              @if($toko->count() > 0) 
-                @foreach($toko as $key => $value)
-                  <tr>
-                    <td>
-                      {{ $toko->firstItem() + $key }}
-                    </td>
-                    <td>
-                      <img src="{{ asset('toko/image') }}/{{ $value->nama_toko }}/{{ $value->image }}" alt="{{ $value->nama_toko }}">
-                    </td>
-                    <td>{{ $value->nama_toko }}</td>
-                    <td>{{ $value->user->full_name }}</td>
-                    <td>{{ $value->user->no_hape }}</td>
-                    <td>{{ $value->alamat_toko }}</td>
-                    <td>
-                      <span class="badge {{ $value->status_toko == 'APPROVED' ? 'badge-success' : ($value->status_toko == 'PENDING' ? 'badge-warning' : 'badge-danger') }} badge-sm">{{ $value->status_toko }}</span>
-                    </td>
-                    <td>
-                      <div class="d-flex align-items-center" style="gap: 7px;">
-                        <a href="{{ route('admin.toko.view', $value->kode_toko) }}" class="btn btn-sm btn-primary text-nowrap" style="font-size: 0.8em"><i class="fa fa-eye"></i> Detail</a>
-                        <form class="m-0" action="{{ route('admin.toko.konfirmasi', $value->kode_toko) }}" method="POST">
-                          @method('PUT')
-                          @csrf
-                          <button type="submit" class="btn btn-sm btn-success text-nowrap" style="font-size: 0.8em"><i class="ri-checkbox-circle-fill"></i> Konfirmasi</button>
-                        </form>
-                        <form class="m-0" action="{{ route('admin.toko.reject', $value->kode_toko) }}" method="POST">
-                          @method('PUT')
-                          @csrf
-                          <button type="submit" class="btn btn-sm btn-danger text-nowrap" style="font-size: 0.8em"><i class="ri-delete-bin-5-fill"></i> Reject</button>
-                        </form>
-                      </div>
-                    </td>
-                  </tr>
-                @endforeach
-              @else 
-                  <tr>
-                    <td colspan="11" align="center" class="p-4">Tidak Ada Data</td>
-                  </tr>
-              @endif
-            </tbody>
-            <tfoot>
-              {{ $toko->links() }}
-            </tfoot>
           </table>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  $(function() {
+    table = $('#table').DataTable({
+      processing: true,
+      serverSide: true,
+      paginate: true,
+      ajax: {
+        method: 'POST',
+        url: '{{ route("admin.toko.data-konfirmasi") }}',
+        data: function(d) {
+          d._token = '{{ csrf_token() }}';
+        }
+      },
+      columns: [
+        { data: '#', 
+            render: function(data, type, row, meta) {
+              return meta.row + meta.settings._iDisplayStart + 1;
+        }},
+        { data: 'nama_toko', search: true, name: 'nama_toko'},
+        { data: 'nama_pemilik', search: true, name: 'nama_pemilik'},
+        { data: 'no_hape', search: true, name: 'no_hape'},
+        { data: 'alamat', search: true, name: 'alamat'},
+        { data: 'status', search: true, name: 'status'},
+        { data: 'tanggal', search: true, name: 'tanggal'},
+        { data: 'action', name: 'action'},
+      ]
+    })
+  })
+
+  function konfirmasi_toko(kode_toko) {
+    $.post(`{{ route('admin.toko.konfirmasi') }}`, {
+      _token: '{{ csrf_token() }}',
+      kode_toko: kode_toko
+    }, function(response) {
+      console.log(response)
+      if(response.status && !response.error) {
+        $.toast({
+            heading: 'Success',
+            text: response.message,
+            showHideTransition: 'slide',
+            position: 'top-right',
+            icon: 'success'
+        });
+        table.ajax.reload();
+      }else {
+        $.toast({
+            heading: 'Error',
+            text: response.message,
+            showHideTransition: 'slide',
+            position: 'top-right',
+            icon: 'error'
+        });
+      }
+    })
+  }
+</script>
 @endsection

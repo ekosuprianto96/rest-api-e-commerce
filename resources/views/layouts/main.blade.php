@@ -9,7 +9,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>IORSEL - {{ $title }}</title>
+    <title>{{ config('app.name') }} - {{ $title }}</title>
 
     <!-- Custom fonts for this template-->
     <link href="{{ asset('assets/admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
@@ -41,6 +41,8 @@
     <link href="{{ asset('assets/admin/vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/admin/summernote/summernote.min.css') }}" rel="stylesheet">
     <script src="{{ asset('assets/admin/summernote/summernote.min.js') }}"></script>
+    <script src="{{ asset('vendor/sweetalert/sweetalert.all.js') }}"></script>
+    <script src="https://js.pusher.com/8.0.1/pusher.min.js"></script>
 
 </head>
 
@@ -49,11 +51,11 @@
     <div id="wrapper">
 
         {{-- Start Menu Sidebar --}}
-        <x-admin.menu-sidebar :title="$title"></x-admin.menu-sidebar>
+        <x-menu-sidebar title="{{ $title }}"></x-menu-sidebar>
         {{-- End Menu Sidebar --}}
 
         <div id="content-wrapper" class="d-flex flex-column">
-
+            <x-navbar></x-navbar>
           @yield('content')
 
             <x-admin.footer></x-admin.footer>
