@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Closure;
 use Illuminate\Http\Request;
@@ -20,6 +21,17 @@ class RedirectIfAuthenticated
     public function handle(Request $request, Closure $next, ...$guards)
     {
         $guards = empty($guards) ? [null] : $guards;
+     
+        if(Auth::check()) {
+            $user = User::find(Auth::user()->uuid);
+            if(isset($user)) {
+                foreach($user->roles as $role) {
+                    if(in_array($role->name, array('user', 'toke'))) {
+                        return redirect(route('home'));
+                    }
+                }
+            }
+        }
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {

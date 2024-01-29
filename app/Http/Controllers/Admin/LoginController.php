@@ -18,36 +18,37 @@ use RealRashid\SweetAlert\Facades\Alert;
 
 class LoginController extends Controller
 {
-    public function index() {
+    public function index()
+    {
         return view('admin.auth.login');
     }
 
-    public function authenticate(Request $request) {
+    public function authenticate(Request $request)
+    {
+        $validate = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|min:6|max:16'
+        ]);
         try {
-            $validate = $request->validate([
-                'email' => 'required|email',
-                'password' => 'required|min:6|max:16'
-            ]);
 
             $check_account = User::where([
                 'email' => $request->email
             ])->first();
 
-            if(in_array($check_account->role, array('user', 'toko'))) {
+            if (in_array($check_account->role, array('user', 'toko'))) {
                 Alert::error('Gagal!', 'Login Failed');
                 return redirect()->back();
             }
-            
+
             if (Auth::attempt($validate)) {
                 $request->session()->regenerate();
-                return redirect()->intended('admin/dashboard');
+                return redirect()->intended('admin/dashboard/' . Auth::user()->uuid . '');
             }
-    
+
             Alert::error('Gagal!', 'Login Failed');
             return redirect()->back();
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             return ErrorController::getError($err);
         }
-
     }
 }

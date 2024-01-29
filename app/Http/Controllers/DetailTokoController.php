@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use App\Http\Controllers\API\Handle\ErrorController;
+use App\Models\ImageProduk;
+use Exception;
 
 class DetailTokoController extends Controller
 {
@@ -44,7 +46,7 @@ class DetailTokoController extends Controller
         try {
 
             $toko = DetailToko::with(['produk'])->where([
-                'kode_toko' => $request['kode_toko']
+                'nama_toko' => str_replace('-', ' ', $request['kode_toko'])
             ])->first();
 
             if (empty($toko)) {
@@ -232,17 +234,15 @@ class DetailTokoController extends Controller
         if ($bulanSekarang <= 6) {
             $month = ['Jan', 'Feb', 'Mar', 'Apr', 'Mey', 'Jun'];
             $data = [
-                'data' => [
-                    [
-                        'nama' => 'Pendapatan',
-                        'data' => [
-                            DetailOrder::whereMonth('created_at', Carbon::JANUARY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
-                            DetailOrder::whereMonth('created_at', Carbon::FEBRUARY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
-                            DetailOrder::whereMonth('created_at', Carbon::MARCH)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
-                            DetailOrder::whereMonth('created_at', Carbon::APRIL)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
-                            DetailOrder::whereMonth('created_at', Carbon::MAY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
-                            DetailOrder::whereMonth('created_at', Carbon::JUNE)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya')
-                        ]
+                [
+                    'name' => 'Pendapatan',
+                    'data' => [
+                        DetailOrder::whereMonth('created_at', Carbon::JANUARY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                        DetailOrder::whereMonth('created_at', Carbon::FEBRUARY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                        DetailOrder::whereMonth('created_at', Carbon::MARCH)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                        DetailOrder::whereMonth('created_at', Carbon::APRIL)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                        DetailOrder::whereMonth('created_at', Carbon::MAY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya'),
+                        DetailOrder::whereMonth('created_at', Carbon::JUNE)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_biaya')
                     ]
                 ]
             ];
@@ -683,6 +683,77 @@ class DetailTokoController extends Controller
                 ]
             );
         } catch (\Exception $err) {
+            return ErrorController::getResponseError($err);
+        }
+    }
+
+    public function storeImageProduk(Request $request)
+    {
+        try {
+
+            if ($request->hasFile('image')) {
+                $image = new ImageProduk();
+                $file = $request->file('image');
+                $ext = $file->getClientOriginalExtension();
+                $newName = rand(10000, 99999) . '.' . $ext;
+                $path = 'produk/image/' . Auth::user()->toko->kode_toko;
+                $file->move(public_path($path), $newName);
+
+                $image->url = asset($path . '/' . $newName);
+                $image->uuid = Str::uuid();
+                $image->kode_produk = $request->kode_produk;
+                $image->an = 1;
+                $image->save();
+
+                return response()->json([
+                    'status' => true,
+                    'error' => false,
+                    'message' => 'Berhasil store gambar.',
+                    'detail' => 1
+                ], 200);
+            }
+
+            return response()->json([
+                'status' => false,
+                'error' => true,
+                'message' => 'Tidak ada gambar yang dipilih.',
+                'detail' => null
+            ]);
+        } catch (\Exception $err) {
+            return ErrorController::getResponseError($err);
+        }
+    }
+
+    public function destroyImage(Request $request)
+    {
+        try {
+
+            $image = ImageProduk::where([
+                'uuid' => $request->uuid_image,
+                'kode_produk' => $request->kode_produk
+            ]);
+
+            if (empty($image)) {
+                return response()->json([
+                    'status' => false,
+                    'error' => true,
+                    'message' => 'Data Not Found.',
+                    'detail' => null
+                ]);
+            }
+
+            $pathIamge = str_replace(env('APP_URL'), '', $image->url);
+            File::delete(public_path($path));
+
+            $image->delete();
+
+            return response()->json([
+                'status' => true,
+                'error' => false,
+                'message' => 'Berhasil hapus gambar',
+                'detail' => 1
+            ], 200);
+        } catch (Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }

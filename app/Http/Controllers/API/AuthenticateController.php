@@ -231,17 +231,15 @@ class AuthenticateController extends Controller
             if ($bulanSekarang <= 6) {
                 $month = ['Jan', 'Feb', 'Mar', 'Apr', 'Mey', 'Jun'];
                 $data = [
-                    'data' => [
-                        [
-                            'nama' => 'Pendapatan',
-                            'data' => [
-                                TransaksiKomisiReferal::whereMonth('created_at', Carbon::JANUARY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_komisi'),
-                                TransaksiKomisiReferal::whereMonth('created_at', Carbon::FEBRUARY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_komisi'),
-                                TransaksiKomisiReferal::whereMonth('created_at', Carbon::MARCH)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_komisi'),
-                                TransaksiKomisiReferal::whereMonth('created_at', Carbon::APRIL)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_komisi'),
-                                TransaksiKomisiReferal::whereMonth('created_at', Carbon::MAY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_komisi'),
-                                TransaksiKomisiReferal::whereMonth('created_at', Carbon::JUNE)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_komisi')
-                            ]
+                    [
+                        'name' => 'Pendapatan',
+                        'data' => [
+                            TransaksiKomisiReferal::whereMonth('created_at', Carbon::JANUARY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_komisi'),
+                            TransaksiKomisiReferal::whereMonth('created_at', Carbon::FEBRUARY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_komisi'),
+                            TransaksiKomisiReferal::whereMonth('created_at', Carbon::MARCH)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_komisi'),
+                            TransaksiKomisiReferal::whereMonth('created_at', Carbon::APRIL)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_komisi'),
+                            TransaksiKomisiReferal::whereMonth('created_at', Carbon::MAY)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_komisi'),
+                            TransaksiKomisiReferal::whereMonth('created_at', Carbon::JUNE)->whereYear('created_at', Carbon::now()->format('Y'))->sum('total_komisi')
                         ]
                     ]
                 ];
@@ -264,7 +262,6 @@ class AuthenticateController extends Controller
             $arrayKomisi['charts'] = [
                 'bulan' => $month,
                 'data' => $data
-
             ];
 
             $arrayKomisi['total']['total_komisi'] = number_format($trx_pay->sum('total_komisi'), 0);

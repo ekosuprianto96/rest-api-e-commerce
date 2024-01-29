@@ -43,7 +43,7 @@
                     <td>{{ $value->created_at->format('d/m/Y') }}</td>
                     <td>
                       <div class="d-flex align-items-center justify-content-center" style="gap: 7px;">
-                        <a href="{{ route('admin.payment.detail', $value->no_trx) }}" class="btn btn-sm btn-primary text-nowrap" style="font-size: 0.8em"><i class="fa fa-eye"></i> Detail</a>
+                        <a href="javascript:void(0)" onclick="viewDetailWithdraw('{{ $value->no_trx }}')" class="btn btn-sm btn-primary text-nowrap" style="font-size: 0.8em"><i class="fa fa-eye"></i> Detail</a>
                         <button type="button" class="btn konfirmasi btn-sm btn-success text-nowrap" style="font-size: 0.8em"><i class="ri-checkbox-circle-fill"></i> Konfirmasi</button>
                       </div>
                       {{-- Modal --}}
@@ -99,6 +99,65 @@
   </div>
 </div>
 
+<div class="modal fade" id="modalDetailWithdraw" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="modalDetailWithdrawLabel" aria-hidden="true">
+  <div class="modal-dialog modl-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalDetailWithdrawLabel">Detail Permintaan Withdraw</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-12">
+            <ul class="w-100 mb-3 m-0 p-0">
+              <li class="py-2 px-2 d-flex justify-content-between align-items-center">
+                <span>No Transaksi</span>
+                <span id="noTrx">-</span>
+              </li>
+              <li class="py-2 px-2 d-flex justify-content-between align-items-center">
+                <span>Nama Customer</span>
+                <span id="namaUser">-</span>
+              </li>
+              <li class="py-2 px-2 d-flex justify-content-between align-items-center">
+                <span>Total Permintaan</span>
+                <span id="totalPermintaan">0</span>
+              </li>
+              <li style="border-bottom: 2px dotted rgb(165, 165, 165);" class="py-2 px-2 mb-2 d-flex justify-content-between align-items-center">
+                <span>Biaya Admin</span>
+                <span id="biayaAdmin">0</span>
+              </li>
+              <li class="py-2 px-2 bg-danger text-light d-flex justify-content-between align-items-center">
+                <span>Total Diterima</span>
+                <span id="totalDiterima">0</span>
+              </li>
+            </ul>
+            <h5 class="py-3" style="border-bottom: 2px dotted rgb(165, 165, 165);">Transfer Ke:</h5>
+            <ul class="w-100 m-0 p-0">
+              <li class="py-2 px-2 d-flex justify-content-between align-items-center">
+                <span>Nama Pemilik</span>
+                <span id="namaPemilik">-</span>
+              </li>
+              <li class="py-2 px-2 d-flex justify-content-between align-items-center">
+                <span>Nama Bank/Wallet</span>
+                <span id="namaAccount">-</span>
+              </li>
+              <li class="py-2 px-2 d-flex justify-content-between align-items-center">
+                <span>No Rek/No Wallet</span>
+                <span id="norek">0</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   $(function() {
     const btnKonfirmasi = $('.konfirmasi');
@@ -107,6 +166,52 @@
         $('#pilihPayment').modal('show');
        })
     });
-  })
+  });
+
+
+  function viewDetailWithdraw(notrx) {
+    getDetailTrx(notrx).then(response => {
+      const { status, error, message, detail } = response;
+      if(status && !error) {
+        $('#noTrx').text(detail.no_trx);
+        $('#namaUser').text(detail.nama_user);
+        $('#biayaAdmin').text('Rp. '+detail.biaya_admin);
+        $('#totalPermintaan').text('Rp. '+detail.total_withdraw);
+        $('#totalDiterima').text('Rp. '+detail.total_withdraw);
+        $('#namaPemilik').text(detail.nama_pemilik);
+        $('#namaAccount').text((detail.type_pembayaran == 'wallet' ? detail.nama_wallet : detail.bank.payment_name));
+        $('#norek').text((detail.type_pembayaran == 'wallet' ? detail.nomor_wallet : detail.norek_tujuan));
+        $('#modalDetailWithdraw').modal('show');
+      }else {
+        $.toast({
+            heading: 'Error',
+            text: response.message,
+            showHideTransition: 'slide',
+            position: 'top-right',
+            icon: 'error'
+        });
+      }
+    }).catch(err => {
+      const { message } = err;
+      $.toast({
+          heading: 'Error',
+          text: message,
+          showHideTransition: 'slide',
+          position: 'top-right',
+          icon: 'error'
+      });
+    });
+  }
+
+  function getDetailTrx(notrx) {
+    return new Promise((resolve, reject) => {
+      $.get('{{ url("/admin/transaksi/withdraw/detail-withdraw") }}?notrx='+notrx)
+        .done(response => {
+          resolve(response);
+        }).fail(err => {
+          reject(err);
+        })
+    })
+  }
 </script>
 @endsection

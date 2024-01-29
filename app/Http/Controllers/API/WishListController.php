@@ -12,21 +12,23 @@ use App\Models\Wishlist;
 
 class WishListController extends Controller
 {
-    public function show() {
+    public function show()
+    {
         try {
 
             $wishlist = Wishlist::selectRaw('count(wishlists.kode_produk) as quantity, produk.*, detail_toko.kode_toko, detail_toko.nama_toko, detail_toko.image as image_toko, kategori.nama_kategori')
-                        ->join('produk', 'wishlists.kode_produk', 'produk.kode_produk')
-                        ->join('kategori', 'produk.kode_kategori', 'kategori.kode_kategori')
-                        ->join('detail_toko', 'produk.kode_toko', 'detail_toko.kode_toko')
-                        ->where('wishlists.uuid_user', Auth::user()->uuid)
-                        ->where('produk.an', 1)
-                        ->groupBy('produk.kode_produk')
-                        ->get();
-            foreach($wishlist as $c) {
+                ->join('produk', 'wishlists.kode_produk', 'produk.kode_produk')
+                ->join('kategori', 'produk.kode_kategori', 'kategori.kode_kategori')
+                ->join('detail_toko', 'produk.kode_toko', 'detail_toko.kode_toko')
+                ->where('wishlists.uuid_user', Auth::user()->uuid)
+                ->where('produk.an', 1)
+                ->groupBy('produk.kode_produk')
+                ->get();
+            foreach ($wishlist as $c) {
                 $produk = Produk::with(['kategori', 'toko'])->where([
                     'kode_produk' => $c->kode_produk
                 ])->first();
+                $c->image_produk = $produk->images[0]->url;
                 $c->harga = $produk->getHargaDiskon();
                 $c->form = $produk->form;
             }
@@ -36,13 +38,13 @@ class WishListController extends Controller
                 'message' => 'Get data success fully',
                 'detail' => $wishlist
             ], 200);
-
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         try {
             // Check Cart
             $check_wishlist = Wishlist::where([
@@ -50,7 +52,7 @@ class WishListController extends Controller
                 'uuid_user' => Auth::user()->uuid
             ])->first();
 
-            if(isset($check_wishlist)) {
+            if (isset($check_wishlist)) {
                 $check_wishlist->delete();
                 return response()->json([
                     'status' => true,
@@ -58,12 +60,12 @@ class WishListController extends Controller
                     'message' => 'Yah, Produk Kamu Berhasil Dihapus Dari Wishlist.',
                     'detail' => []
                 ]);
-            }else {
+            } else {
                 $wishlist = new Wishlist();
                 $wishlist->kode_produk = $request['kode_produk'];
                 $wishlist->uuid_user = Auth::user()->uuid;
-                
-                if($wishlist->save()) {
+
+                if ($wishlist->save()) {
                     return response()->json([
                         'status' => true,
                         'error' => false,
@@ -72,11 +74,8 @@ class WishListController extends Controller
                     ]);
                 }
             }
-
-            
-        }catch(\Exception $err) {
+        } catch (\Exception $err) {
             return ErrorController::getResponseError($err);
         }
     }
-
 }

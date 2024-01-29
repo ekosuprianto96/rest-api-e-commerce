@@ -33,6 +33,12 @@ use App\Http\Controllers\Admin\Transaksi\DetailSaldoController;
 use App\Http\Controllers\Admin\Settings\SettingBannerController;
 use App\Http\Controllers\Admin\Transaksi\Topup\TransaksiTopupController;
 use App\Http\Controllers\Admin\Transaksi\Withdraw\TransaksiWithdrawController;
+use App\Http\Controllers\Frontend\Auth\LoginController as AuthLoginController;
+use App\Http\Controllers\Frontend\Cart\CartController;
+use App\Http\Controllers\Frontend\Dashboard\DashboardController as UserDashboardController;
+use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\Frontend\Linggapay\LinggapayController;
+use App\Http\Controllers\Frontend\Produk\ProdukController as FrontendProdukController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,16 +51,46 @@ use App\Http\Controllers\Admin\Transaksi\Withdraw\TransaksiWithdrawController;
 |
 */
 
-Route::get('/', function () {
-  return view('admin.auth.login');
-})->name('login')->middleware('guest');
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::middleware('guest')->group(function () {
+  Route::get('login', [AuthLoginController::class, 'login'])->name('login');
+  Route::post('login/authenticated', [AuthLoginController::class, 'authenticated'])->name('login.authenticated');
+});
+
+// Route Produk
+Route::prefix('produk/')->name('produk.')->group(function () {
+  Route::get('{slug}', [FrontendProdukController::class, 'show'])->name('show');
+});
+Route::middleware(['auth'])->group(function () {
+  Route::get('logout', [AuthLoginController::class, 'logout'])->name('logout');
+  Route::post('logout', [AuthLoginController::class, 'logout'])->name('logout');
+
+  // Route Member
+  Route::name('user.')->group(function () {
+    Route::get('{username}/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
+    Route::get('{username}/keranjang', [UserDashboardController::class, 'keranjang'])->name('keranjang');
+    Route::get('{username}/wishlist', [UserDashboardController::class, 'wishlist'])->name('wishlist');
+
+    // Route Linggapay
+    Route::get('linggapay', [LinggapayController::class, 'index'])->name('linggapay');
+
+    // Route Cart
+    Route::prefix('keranjang/')->name('keranjang.')->group(function() {
+      Route::post('store', [CartController::class, 'store'])->name('store');
+    });
+  });
+});
 
 Route::post('autenticate', [LoginController::class, 'authenticate'])->name('authenticate');
 
 Route::get('user/order/download/{token}/{uuid}', [DownloadController::class, 'download'])->name('download');
 
-Route::prefix('admin/')->name('admin.')->middleware('auth')->group(function () {
-  Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::prefix('admin/')->name('admin.')->middleware(['auth', 'staff'])->group(function () {
+  Route::get('login', function () {
+    return view('admin.auth.login');
+  })->withoutMiddleware('auth');
+  Route::get('dashboard/{uuid}', [DashboardController::class, 'index'])->name('dashboard');
   Route::post('logout', [UserController::class, 'logout'])->name('logout');
   // Route Produk
   // Route::prefix('produk/')->name('produk.')->group(function() {
@@ -142,6 +178,7 @@ Route::prefix('admin/')->name('admin.')->middleware('auth')->group(function () {
 
     Route::prefix('withdraw/')->name('withdraw.')->group(function () {
       Route::get('', [TransaksiWithdrawController::class, 'index'])->name('index');
+      Route::get('detail-withdraw', [TransaksiWithdrawController::class, 'detailWithdraw'])->name('detail-withdraw');
       Route::post('data-withdraw', [TransaksiWithdrawController::class, 'data_withdraw'])->name('data-withdraw');
     });
 
