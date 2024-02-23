@@ -245,14 +245,10 @@ class MessageController extends Controller
                 event(new NotifikasiPesan($notification));
                 event(new LiveChat($post_data));
 
-                $redis = Redis::connection();
-                $redis->publish('message', json_encode($post_data));
-
                 return response()->json([
                     'status' => true,
                     'error' => false,
-                    'detail' => $post_data,
-                    'test' => $redis
+                    'detail' => $post_data
                 ], 200);
             }
         }catch(\Exception $err) {
@@ -304,9 +300,6 @@ class MessageController extends Controller
 
                 event(new NotifikasiPesan($notification));
                 event(new LiveChat($post_data));
-
-                $redis = Redis::connection();
-                $redis->publish('message', json_encode($post_data));
 
                 return response()->json([
                     'status' => true,

@@ -8,4 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 class ReferalTempUser extends Model
 {
     use HasFactory;
+    protected $guarded = ['id'];
 }

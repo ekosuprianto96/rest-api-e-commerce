@@ -60,20 +60,20 @@ class Produk extends Model
     {
         if ($this->potongan_harga > 0) {
             $potongan = (float) ($this->harga - $this->potongan_harga);
-            $this->harga_fixed = number_format($potongan, 0);
-            $this['potongan'] = number_format($this->potongan_harga, 0);
+            $this->harga_fixed = number_format($potongan, 0, 0, '.');
+            $this['potongan'] = number_format($this->potongan_harga, 0, 0, '.');
         }
 
         if ($this->potongan_persen > 0) {
             $potongan = (float) $this->harga * ($this->potongan_persen  / 100);
             $this->harga_fixed = (float) $this->harga - $potongan;
-            $this['potongan'] = number_format($potongan, 0);
-            $this->harga_fixed = number_format($this->harga_fixed, 0);
+            $this['potongan'] = number_format($potongan, 0, 0, '.');
+            $this->harga_fixed = number_format($this->harga_fixed, 0, 0, '.');
         }
 
         return array(
-            'harga_real' => number_format($this->harga, 0),
-            'harga_fixed' => ($this->harga_fixed > 0 ? $this->harga_fixed : number_format($this->harga, 0)),
+            'harga_real' => number_format($this->harga, 0, 0, '.'),
+            'harga_fixed' => ($this->harga_fixed > 0 ? $this->harga_fixed : number_format($this->harga, 0, 0, '.')),
             'harga_diskon' => ($this['potongan'] > 0 ? $this['potongan'] : 0)
         );
     }
@@ -141,6 +141,46 @@ class Produk extends Model
             }
         }
         return $produkSerupa;
+    }
+
+    public static function getProdukRekomendasi()
+    {
+        $produkRekom = Cache::tags('produk')->rememberForever('produkRekom', function () {
+            return Produk::select('produk.*', DB::raw('SUM(detail_orders.quantity) as total_penjualan'))
+                ->leftJoin('detail_orders', 'detail_orders.kode_produk', 'produk.kode_produk')
+                ->where([
+                    'produk.an' => 1,
+                    'produk.status_confirm' => 1
+                ])
+                ->groupBy('produk.kode_produk')
+                ->orderBy('total_penjualan')
+                ->take(20)->get();
+        });
+
+        if (@count($produkRekom) > 0) {
+            foreach ($produkRekom as $pr) {
+                $produk = Produk::where('kode_produk', $pr->kode_produk)->first();
+                $pr->detail_harga = $produk->getHargaDiskon($produk);
+            }
+        }
+        return $produkRekom;
+    }
+
+    public function hargaReal() {
+        return $this->harga;
+    }
+
+    public function totalDiskon() {
+        if ($this->potongan_harga > 0) {
+            return $this->potongan_harga;
+        }
+
+        if ($this->potongan_persen > 0) {
+            $potongan = (float) $this->harga * ($this->potongan_persen  / 100);
+            return $potongan;
+        }
+
+        return 0;
     }
     // public function cart() {
     //     return $this->belongsToMany(Cart::class, 'cart_produk', 'kode_produk', 'kode_cart');

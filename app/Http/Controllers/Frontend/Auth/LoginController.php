@@ -10,6 +10,7 @@ use App\Jobs\SendNotificationLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\API\Handle\ErrorController;
+use Illuminate\Support\Facades\Redis;
 
 class LoginController extends Controller
 {
@@ -51,10 +52,10 @@ class LoginController extends Controller
                 'uuid_user' => $user->uuid,
                 'tgl_login' => Carbon::now()->format('Y-m-d')
             ]);
-
+            
            return ErrorController::redirectSuccessLogin($request, 'Berhasil Login');
         }catch(\Exception $err) {
-            return ErrorController::getError($err)->message('Mohon maaf, Terjadi kesalahan system.');
+            return ErrorController::getError($err);
         }
     }
 

@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('frontend/css/main.css') }}">
+    {{-- <link rel="stylesheet" href="{{ asset('frontend/css/main.css') }}"> --}}
 
     {{-- Library AOS --}}
     <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
@@ -17,6 +17,17 @@
 
     {{-- Script JQUERY --}}
     <script src="{{ asset('assets/admin/vendor/jquery/jquery.min.js') }}"></script>
+    
+    {{-- Init Owlcaraousel --}}
+    <script src="{{ asset('assets/frontend/vendor/owlcaraousel/owl.carousel.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('assets/frontend/vendor/owlcaraousel/owl.carousel.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/frontend/vendor/owlcaraousel/owl.theme.default.min.css') }}">
+
+
+    {{-- CDN FLOWBEET --}}
+    {{-- <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.css" rel="stylesheet" /> --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
+
     <style>
         * {
           font-family: 'Poppins', sans-serif;
@@ -39,6 +50,8 @@
     @if (config('sweetalert.alwaysLoadJS') === false && config('sweetalert.neverLoadJS') === false)
         <script src="{{ $cdn ?? asset('vendor/sweetalert/sweetalert.all.js') }}"></script>
     @endif
+
+    @include('frontend.layouts.scripts.script-socket')
 </head>
 <body class="bg-slate-100">
 
@@ -62,6 +75,55 @@
     <x-frontend.layouts.footer />    
     <script>
         AOS.init();
+    </script>
+
+    <script>
+        $.fn.check = function(callback = null) {
+            if(callback) {
+                callback(this);
+            }else {
+                $(this).prop('checked', true);
+            }
+            return this;
+        }
+
+        $.fn.unCheck = function() {
+            $(this).prop('checked', false);
+            return this;
+        }
+
+        $.fn.checkedAll = function(className) {
+            const checkboxes = $('.'+className);
+            $.each(checkboxes, function(index, value) {
+                $(value).prop('checked', true);
+            });
+
+            return this;
+        }
+
+        $.fn.unCheckedAll = function(className) {
+            const checkboxes = $('.'+className);
+            $.each(checkboxes, function(index, value) {
+                $(value).prop('checked', false);
+            });
+
+            return this;
+        }
+
+        $.fn.rotate = function(rotate = 1) {
+            if(rotate == 0) {
+                $(this).removeClass('rotate-180').addClass('rotate-0');
+            }else {
+                if(!$(this).hasClass('rotate-180')) {
+                    $(this).addClass('rotate-180').removeClass('rotate-0');
+                    
+                    return this;
+                }
+                
+                $(this).removeClass('rotate-180').addClass('rotate-0');
+            }
+            return this;
+        }
     </script>
 </body>
 </html>

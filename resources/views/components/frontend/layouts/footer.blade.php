@@ -22,47 +22,6 @@
                 </ul>
             </div>
         @endforeach
-        <!-- <div class="lg:p-4">
-          <div class="mb-4">
-            <h4 class="text-slate-50 font-bold text-[1.3em]">Informasi</h4>
-          </div>
-          <ul>
-            <li><router-link to="/" class="text-slate-50 text-sm py-2 block">Terms & Conditions</router-link></li>
-            <li><router-link to="/" class="text-slate-50 text-sm py-2 block">Sejarah Lingga Store</router-link></li>
-            <li><router-link to="/" class="text-slate-50 text-sm py-2 block">Transaksi</router-link></li>
-            <li><router-link to="/" class="text-slate-50 text-sm py-2 block">Pengembalian Dana</router-link></li>
-            <li><router-link to="/" class="text-slate-50 text-sm py-2 block">Produk Yang Dilarang</router-link></li>
-          </ul>
-        </div>
-        <div class="lg:p-4">
-          <div class="mb-4">
-            <h4 class="text-slate-50 font-bold text-[1.3em]">Ikuti Kami</h4>
-          </div>
-          <ul class="flex items-center gap-3 mb-4">
-            <li>
-              <router-link to="/" class="text-slate-50 text-lg py-2 block">
-                <i class="ri-facebook-fill"></i>
-              </router-link>
-            </li>
-            <li>
-              <router-link to="/" class="text-slate-50 text-lg py-2 block">
-                <i class="ri-instagram-fill"></i>
-              </router-link>
-            </li>
-            <li>
-              <router-link to="/" class="text-slate-50 text-lg py-2 block">
-                <i class="ri-youtube-fill"></i>
-              </router-link>
-            </li>
-          </ul>
-          <div class="">
-            <p class="text-slate-50 mb-3">Langganan Newsletter Kami</p>
-            <div class="w-full relative">
-              <input type="email" placeholder="Email" class="w-full bg-slate-50 rounded-md h-[35px] focus:outline-none px-3">
-              <button class="px-6 py-2 bg-blue-600 text-sm mt-3 text-slate-50 rounded-md shadow-lg">Langganan</button>
-            </div>
-          </div>
-        </div> -->
       </div>
       <div class="flex flex-wrap items-end lg:gap-0 gap-3 py-8">
         <div class="lg:w-1/2 w-full lg:order-1 order-2 flex items-end min-h-full">

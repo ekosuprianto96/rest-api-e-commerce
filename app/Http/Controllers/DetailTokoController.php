@@ -705,12 +705,12 @@ class DetailTokoController extends Controller
                 $image->an = 1;
                 $image->save();
 
-                return response()->json([
+                return [
                     'status' => true,
                     'error' => false,
                     'message' => 'Berhasil store gambar.',
-                    'detail' => 1
-                ], 200);
+                    'detail' => $image->uuid
+                ];
             }
 
             return response()->json([

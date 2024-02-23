@@ -40,6 +40,9 @@ use App\Models\DetailToko;
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //     return $request->user();
 // });
+Route::post('send-message', function(Request $request) {
+    return response()->json(['msg'=> 'ok']);
+});
 
 Route::get('get-manifest', [ManifestController::class, 'index'])->name('manifest');
 Route::prefix('checkout')->middleware('auth:api')->group(function () {

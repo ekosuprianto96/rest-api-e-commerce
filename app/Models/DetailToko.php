@@ -75,4 +75,8 @@ class DetailToko extends Model
         }
         return $produkToko;
     }
+
+    public function addSaldoToko() {
+        
+    }
 }
