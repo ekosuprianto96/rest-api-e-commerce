@@ -28,13 +28,13 @@
             <div class="">
                 <ul class="flex justify-end items-center">
                     @auth
-                        <li v-if="user.account.auth"><a href="{{ route('logout') }}" class="px-3 text-sm border-r-2 text-slate-50"><i class="ri-user-fill"></i> Logout</a></li>
+                        <li><a href="{{ route('logout') }}" class="px-3 text-sm border-r-2 text-slate-50"><i class="ri-user-fill"></i> Logout</a></li>
                     @endauth
                     @guest
-                        <li v-if="!user.account.auth"><a href="" class="px-3 text-sm text-slate-50"><i class="ri-user-fill"></i> Register</a></li>
+                        <li><a href="" class="px-3 text-sm text-slate-50"><i class="ri-user-fill"></i> Register</a></li>
                     @endguest
                     @auth
-                        <li v-else><a href="{{ route('user.dashboard', getUserName()) }}" class="px-3 text-sm border-l-2 text-slate-50"><i class="ri-dashboard-2-fill"></i> Dashboard</a></li>                        
+                        <li><a href="{{ route('user.dashboard', getUserName()) }}" class="px-3 text-sm border-l-2 text-slate-50"><i class="ri-dashboard-2-fill"></i> Dashboard</a></li>                        
                     @endauth
                 </ul>
             </div>
@@ -51,23 +51,22 @@
             <div class="col-span-3">
                 <div class="rounded-lg bg-slate-50 py-2 w-full overflow-hidden flex items-center h-[40px]">
                     <div class="w-[25%] px-2 h-full flex items-center justify-center border-r-2">
-                    <span data-target="dropDownKategori" id="button-drop" class="text-blue-700 whitespace-nowrap block text-sm hover:bg-blue-300 p-1 hover:cursor-pointer h-max rounded-lg">
-                        Semua Kategori
-                        <i data-target="dropDownKategori" class="ri-arrow-down-s-line ms-2"></i>
-                    </span>
+                        <span data-target="dropDownKategori" id="button-drop" class="text-blue-700 whitespace-nowrap block text-sm hover:bg-blue-300 p-1 hover:cursor-pointer h-max rounded-lg">
+                            Semua Kategori
+                            <i data-target="dropDownKategori" class="ri-arrow-down-s-line ms-2"></i>
+                        </span>
                     </div>
                     <div class="w-[80%] relative flex items-center">
-                    <input v-model="keyword" type="text" class="px-3 bg-slate-50 focus:outline-none w-full py-3 h-full text-[0.9em]" placeholder="Cari barang disini...">
-                    <button type="button" class="absolute right-2 p-2 rounded-lg h-[30px] flex justify-center items-center z-50 text-slate-50 shadow-lg bg-gradient-to-tr from-blue-500 to-blue-600">
-                        <i class="ri-search-line"></i>
-                    </button>
+                        <input v-model="keyword" type="text" class="px-3 bg-slate-50 focus:outline-none w-full py-3 h-full text-[0.9em]" placeholder="Cari barang disini...">
+                        <button type="button" class="absolute right-2 p-2 rounded-lg h-[30px] flex justify-center items-center z-50 text-slate-50 shadow-lg bg-gradient-to-tr from-blue-500 to-blue-600">
+                            <i class="ri-search-line"></i>
+                        </button>
                     </div>
                 </div>
             </div>
-      
             <div class="col-span-1 flex items-center">
                 <div class="{{ Auth::check() ? 'grid grid-cols-3 w-full gap-2' : 'flex justify-between items-center w-full gap-2' }}">
-                    <a href="{{ Auth::check() ? '' : route('login') }}" class="bg-white w-max px-2 py-1 rounded-md relative">
+                    <a href="{{ Auth::check() ? route('user.keranjang', getUserName()) : route('login') }}" class="bg-white w-max px-2 py-1 rounded-md relative">
                         <i class="ri-shopping-cart-fill text-blue-500"></i>
                         <span id="countCartDesktop" class="w-[20px] h-[20px] text-[0.6em] text-slate-50 bg-red-500 rounded-full flex justify-center items-center absolute -top-2 -right-2">{{ $totalCart ?? 0 }}</span>
                     </a>
@@ -110,7 +109,7 @@
                     </a>
                 @endguest
                 @auth
-                    <a href="" class="bg-white w-max px-2 py-1 rounded-md relative">
+                    <a href="{{ route('user.keranjang', getUserName()) }}" class="bg-white w-max px-2 py-1 rounded-md relative">
                         <i class="ri-shopping-cart-fill text-blue-500"></i>
                         <span id="countCartMobile" class="w-[20px] h-[20px] text-[0.6em] text-slate-50 bg-red-500 rounded-full flex justify-center items-center absolute -top-2 -right-2">{{ $totalCart ?? 0 }}</span>
                     </a>
@@ -130,47 +129,72 @@
                         <span class="font-bold text-[1.3em]">Menu</span>
                     </div>
                     @auth
-                        <div v-if="user.detail_toko.status_toko == 'APPROVED'" class="w-full py-2 lg:block">
-                            <button class="px-6 py-2 text-sm text-center bg-blue-600 rounded-md w-full block text-slate-50">Upload Produk</button>
+                        <div class="w-full py-2 lg:block">
+                            <a href="{{ route('user.dashboard', getUserName()) }}" class="px-6 py-2 text-sm text-center {{ isActiveMenu('user.dashboard') }} bg-blue-600 text-slate-50 rounded-md w-full block">Dasbord</a>
                         </div>
-                        <ul class="h-max pb-3 border-b-2 overflow-y-auto">
-                            <li class="mb-2"><button type="button" :class="$route.name == 'iorpay' ? 'bg-blue-500 text-slate-50' : ''" class="py-2 hover:bg-blue-500 w-full flex items-center relative hover:text-slate-50 rounded-lg px-2 text-sm">
-                            <i class="ri-wallet-3-fill me-1"></i> LinggaPay <button type="button" class="absolute right-2 text-xs">Aktifkan</button></button></li>
-                            <li class="mb-2"><button type="button" :class="$route.name == 'keranjang' ? 'bg-blue-500 text-slate-50' : ''" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start">
-                            <i class="ri-shopping-cart-2-fill"></i> Keranjang</button>
+                        <ul class="h-max overflow-y-auto">
+                            <li class="mb-2"><a href="{{ route('user.linggaPay', getUserName()) }}" class="py-2 hover:bg-blue-500 w-full {{ isActiveMenu('user.linggaPay') }} flex items-center relative hover:text-slate-50 rounded-lg px-2 text-sm">
+                                <i class="ri-wallet-3-fill me-1"></i> LinggaPay <button type="button" class="absolute right-2 text-xs">Aktifkan</button></a>
                             </li>
-                            <li class="mb-2"><button type="button" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start">
-                            <i class="ri-percent-fill"></i> Komisi Referal</button></li>
-                            <li class="mb-2"><button type="button" :class="$route.name == 'daftar-pesan' ? 'bg-blue-500 text-slate-50' : ''" class="py-2 relative hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start">
-                            <i class="ri-chat-4-fill"></i> Pesan <span v-if="notification.pesan > 0" class="absolute right-2 rounded-full w-[20px] h-[20px] flex justify-center items-center text-[0.6em] top-[25%] bg-red-500 text-slate-50">1</span></button></li>
+                            <li class="mb-2"><a href="{{ route('user.keranjang', getUserName()) }}" class="py-2 hover:bg-blue-500 {{ isActiveMenu('user.keranjang') }} hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start">
+                                <i class="ri-shopping-cart-2-fill"></i> Keranjang</a>
+                            </li>
+                            <li class="mb-2"><a href="{{ route('user.affiliasi', getUserName()) }}" class="py-2 hover:bg-blue-500 {{ isActiveMenu('user.affiliasi') }} hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start">
+                                <i class="ri-percent-fill"></i> Komisi Referal</a>
+                            </li>
+                            <li class="mb-2"><a href="" class="py-2 relative hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start">
+                                <i class="ri-chat-4-fill"></i> Pesan <span v-if="notification.pesan > 0" class="absolute right-2 rounded-full w-[20px] h-[20px] flex justify-center items-center text-[0.6em] top-[25%] bg-red-500 text-slate-50">1</span></a>
+                            </li>
                             <!-- <li class="mb-2"><button type="button" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start" @click="getRoute('dashboard')">
                             <i class="ri-edit-fill"></i> Post Permintaan</button></li> -->
-                            <li class="mb-2"><button type="button" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start">
-                            <i class="ri-survey-fill"></i> Daftar Transaksi</button></li>
-                            <li class="mb-2"><button type="button" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start">
-                            <i class="ri-survey-fill"></i> Daftar Pesanan</button></li>
+                            <li class="mb-2"><a href="{{ route('user.transaksi', getUserName()) }}" class="py-2 hover:bg-blue-500 {{ isActiveMenu('user.transaksi') }} hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start">
+                                <i class="ri-survey-fill"></i> Daftar Transaksi</a>
+                            </li>
+                            <li class="mb-2"><a href="{{ route('user.pesanan', getUserName()) }}" class="py-2 hover:bg-blue-500 {{ isActiveMenu('user.pesanan') }} hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start">
+                                <i class="ri-survey-fill"></i> Daftar Pesanan</a>
+                            </li>
                             <li class="mb-2"><button type="button" :class="$route.name == 'detail-akun' ? 'bg-blue-500 text-slate-50' : ''" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start">
-                            <i class="ri-user-settings-fill"></i> Pengaturan Akun</button></li>
+                                <i class="ri-user-settings-fill"></i> Pengaturan Akun</button>
+                            </li>
                             <li class="mb-2"><button type="button" :class="$route.name == 'pemberitahuan' ? 'bg-blue-500 text-slate-50' : ''" class="py-2 relative hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start">
-                            <i class="ri-user-settings-fill"></i> Pemberitahuan <span class="absolute right-2 rounded-full w-[20px] h-[20px] flex justify-center items-center text-[0.6em] top-[25%] bg-red-500 text-slate-50">0</span></button></li>
+                                <i class="ri-user-settings-fill"></i> Pemberitahuan <span class="absolute right-2 rounded-full w-[20px] h-[20px] flex justify-center items-center text-[0.6em] top-[25%] bg-red-500 text-slate-50">0</span></button>
+                            </li>
                         </ul>
-                        <ul :class="user.detail_toko.status_toko == 'APPROVED' ? '' : 'pb-3 mt-3'" class="h-max">
-                            <li v-if="user.detail_toko.status_toko == 'PENDING' || user.detail_toko.status_toko == ''"><button :disabled="user.detail_toko.status_toko == 'PENDING' || user.detail_toko.status_toko == 'REJECT'" type="button" class="py-2 hover:bg-blue-500 hover:text-slate-50 w-full flex items-center relative rounded-lg px-2 text-sm text-start">
-                            <i class="ri-store-2-fill me-1"></i> Buka Toko <button v-if="user.detail_toko.status_toko == 'PENDING'" type="button" class="absolute right-2 text-xs">PENDING</button></button></li>
-                            <!-- <li class="mb-2"><button type="button" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start" @click="getRoute('dashboard')">
-                            <i class="ri-bank-card-fill"></i> Pembayaran</button></li> -->
+                        <ul class="h-max border-t-2 pt-2">
+                            @isset(Auth::user()->toko)
+                                @if(Auth::user()->toko->status_toko == 'PENDING' || Auth::user()->toko->status_toko == '')  
+                                    <li class="mb-2">
+                                        <a href="" class="py-2 {{ isActiveMenu('') }} w-full flex items-center relative rounded-lg px-2 text-sm text-start">
+                                            <i class="ri-store-2-fill me-1"></i> Buka Toko 
+                                            @if(Auth::user()->toko->status_toko === 'PENDING')
+                                                <button type="button" class="absolute right-2 text-xs">PENDING</button>
+                                            @endif
+                                        </a>
+                                    </li>
+                                @elseif(Auth::user()->toko->status_toko == 'APPROVED')
+                                    <li class="mb-2">
+                                        <a href="{{ route('toko.dashboard') }}" class="py-2 {{ isActiveMenu('toko.dashboard') }} w-full flex items-center relative rounded-lg px-2 text-sm text-start">
+                                            <i class="ri-store-2-fill me-1"></i> Dasbord Toko
+                                        </a>
+                                    </li>
+                                    <li class="mb-2">
+                                        <a href="{{ route('toko.daftar-order') }}" class="py-2 {{ isActiveMenu('toko.daftar-order') }} w-full flex items-center relative rounded-lg px-2 text-sm text-start">
+                                            <i class="ri-store-2-fill me-1"></i> Daftar Order
+                                        </a>
+                                    </li>
+                                    <li class="mb-2">
+                                        <a href="{{ route('toko.daftar-produk') }}" class="py-2 {{ isActiveMenu('toko.daftar-produk') }} w-full flex items-center relative rounded-lg px-2 text-sm text-start">
+                                            <i class="ri-store-2-fill me-1"></i> Daftar Produk
+                                        </a>
+                                    </li>
+                                    <li class="mb-2">
+                                        <a href="" class="py-2 {{ isActiveMenu('') }} w-full flex items-center relative rounded-lg px-2 text-sm text-start">
+                                            <i class="ri-store-2-fill me-1"></i> Profile Toko
+                                        </a>
+                                    </li>
+                                @endif
+                            @endisset
                         </ul>
-                        <ul v-if="user.detail_toko.status_toko == 'APPROVED'" class="h-max mt-3">
-                            <li class="mb-2"><button type="button" class="py-2 relative hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start">
-                            <i class="ri-user-settings-fill"></i> Daftar Order <span v-if="notification.order_toko > 0" class="absolute right-2 rounded-full w-[20px] h-[20px] flex justify-center items-center text-[0.6em] top-[25%] bg-red-500 text-slate-50">0</span></button></li>
-                            <li class="mb-2"><button class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 w-full text-start block text-sm">
-                            <i class="ri-user-settings-fill"></i> Daftar Produk</button></li>
-                            <li class="mb-2"><button type="button" class="py-2 hover:bg-blue-500 hover:text-slate-50 rounded-lg px-2 block text-sm w-full text-start">
-                            <i class="ri-store-2-fill"></i> Setting Toko</button></li>
-                        </ul>
-                        <div v-if="user.account.auth" class="w-full py-2">
-                            <button class="px-6 py-2 text-sm text-center bg-blue-600 rounded-md w-full block text-slate-50">Logout</button>
-                        </div>   
                     @endauth
                     @guest
                         <div class="w-full h-[400px] flex flex-col justify-center items-center">
@@ -179,49 +203,52 @@
                             </div>
                             <ul class="flex flex-col gap-3 py-4 justify-center items-center w-full">
                                 <li class="w-full h-max">
-                                <button class="px-6 py-2 bg-blue-500 w-full block text-center text-slate-50 rounded-md shadow-md">Login</button>
+                                    <button class="px-6 py-2 bg-blue-500 w-full block text-center text-slate-50 rounded-md shadow-md">Login</button>
                                 </li>
                                 <li class="w-full h-max">
-                                <button class="px-6 py-2 bg-blue-500 w-full block text-center text-slate-50 rounded-md shadow-md">Register</button>
+                                    <button class="px-6 py-2 bg-blue-500 w-full block text-center text-slate-50 rounded-md shadow-md">Register</button>
                                 </li>
                             </ul>
                         </div>
                     @endguest
                 </div>
             </div>
+            {{-- <div class="absolute bottom-0 z-[50] p-3 text-center w-full">
+                <p>&copy;Copy Right {{ date('Y') }} {{ config('app.name') }}</p>
+            </div> --}}
         </div>
     </div>
     
     <nav class="fixed block lg:hidden bottom-0 overflow-visible py-1 left-0 right-0 bg-slate-100 z-[90]" style="box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.308);">
         <ul class="grid grid-cols-5 gap-3">
             <li>
-                <a href="" class="h-full flex justify-center w-full items-center flex-col">
+                <a href="{{ route('home') }}" class="h-full flex justify-center w-full items-center flex-col">
                     <i class="ri-home-fill text-[1.5em] text-blue-600"></i>
                     <span class="text-[0.6em]">Home</span>
                 </a>
             </li>
             <li>
-            <button type="button" class="h-full flex justify-center w-full items-center flex-col">
-                <i class="ri-heart-fill text-[1.5em] text-blue-600"></i>
-                <span class="text-[0.6em]">Whislist</span>
-            </button>
+                <a href="{{ Auth::check() ? route('user.wishlist', getUserName()) : route('login') }}" class="h-full flex justify-center w-full items-center flex-col">
+                    <i class="ri-heart-fill text-[1.5em] text-blue-600"></i>
+                    <span class="text-[0.6em]">Whislist</span>
+                </a>
             </li>
             <li class="relative flex justify-center z-50">
-            <button data-target="menuMobile" id="mainMenu" type="button" class="border-4 hover:-top-5 transition-all hover:bg-blue-400 border-blue-300 bg-blue-600 rounded-full -top-3 absolute w-[60px] h-[60px] flex justify-center  items-center flex-col">
-                <i class="ri-apps-fill text-slate-50 text-[1.8em]" data-target="menuMobile"></i>
-            </button>
+                <button data-target="menuMobile" id="mainMenu" type="button" class="border-4 hover:-top-5 transition-all hover:bg-blue-400 border-blue-300 bg-blue-600 rounded-full -top-3 absolute w-[60px] h-[60px] flex justify-center  items-center flex-col">
+                    <i class="ri-apps-fill text-slate-50 text-[1.8em]" data-target="menuMobile"></i>
+                </button>
             </li>
             <li>
-            <button type="button" class="h-full flex justify-center w-full items-center flex-col">
-                <i class="ri-box-1-fill text-[1.5em] text-blue-600"></i>
-                <span class="text-[0.6em]">Pesanan</span>
-            </button>
+                <a href="{{ Auth::check() ? route('user.pesanan', getUserName()) : route('login') }}" class="h-full flex justify-center w-full items-center flex-col">
+                    <i class="ri-box-1-fill text-[1.5em] text-blue-600"></i>
+                    <span class="text-[0.6em]">Pesanan</span>
+                </a>
             </li>
             <li>
-            <button type="button" class="h-full flex justify-center w-full items-center flex-col">
-                <i class="ri-user-fill text-[1.5em] text-blue-600"></i>
-                <span class="text-[0.6em]">Akun</span>
-            </button>
+                <button type="button" class="h-full flex justify-center w-full items-center flex-col">
+                    <i class="ri-user-fill text-[1.5em] text-blue-600"></i>
+                    <span class="text-[0.6em]">Akun</span>
+                </button>
             </li>
         </ul>
     </nav>

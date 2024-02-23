@@ -45,7 +45,7 @@ class AutoBlockToko implements ShouldQueue
                         ->get();
         
         // cek jika ada data toko
-        if(count($log) > 0) {
+        if(@count($log) > 0) {
             foreach($log as $toko) {
                 $toko = DetailToko::where('kode_toko', $toko->kode_toko)->first();
                 if(isset($toko)) {

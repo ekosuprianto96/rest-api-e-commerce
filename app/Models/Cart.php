@@ -35,4 +35,14 @@ class Cart extends Model
     public function user() {
         return $this->belongsTo(User::class, 'uuid_user', 'uuid');
     }
+
+    public function totalKomisiAffiliate() {
+        $produk = Produk::where('kode_produk', $this->kode_produk)->first();
+
+        if(empty($produk)) {
+            return 0;
+        }
+
+        return (float) ($produk->komisi_referal / 100) * $produk->getHargaFixed();
+    }
 }

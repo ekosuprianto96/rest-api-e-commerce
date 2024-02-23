@@ -1,6 +1,50 @@
 <script>
     // Jika anda membagikan link Affiliate ini, maka anda akan mendapatkan komisi Affiliate ketika ada member yang membeli produk ini menggunakan link Affiliate yang anda bagikan
+    let itemsProdukToko = $('.produk-toko').children().length;
+    let itemsProdukSerupa = $('.produk-serupa').children().length;
+    console.log(itemsProdukSerupa)
+    $(document).ready(function(){
+        $(".produk-serupa").owlCarousel({
+            items:2,
+            margin: 8,
+            autoplay: true,
+            autoplayTimeout: 5000,
+            autoWidth:true,
+            responsive:{
+                0:{
+                    items:2
+                },
+                600:{
+                    items: 3
+                },
+                1000:{
+                    items: 5
+                }
+            }
+        });
+    });
+    $(document).ready(function(){
+        $(".produk-toko").owlCarousel({
+            items:2,
+            margin: 8,
+            autoplay: true,
+            autoplayTimeout: 5000,
+            autoWidth:true,
+            responsive:{
+                0:{
+                    items:2
+                },
+                600:{
+                    items:3
+                },
+                1000:{
+                    items: 5
+                }
+            }
+        });
+    });
     $(function() {
+
         $('#buttonAddCart').click(function(event) {
             const kodeproduk = $(this).attr('data-produk');
             postCart(kodeproduk).then(response => {

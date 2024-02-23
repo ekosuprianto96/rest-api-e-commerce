@@ -8,7 +8,7 @@ use RealRashid\SweetAlert\Facades\Alert;
 
 class ErrorController extends Controller
 {
-    static function getResponseError($err, $http_code = 500) {
+    public static function getResponseError($err, $http_code = 500) {
         return response()->json([
             'status' => false,
             'error' => true,
@@ -21,20 +21,20 @@ class ErrorController extends Controller
             
         return redirect()->back();
     }
-    public function message($message = null) {
+    public static function message($message = null) {
         return with('error', $message ?? '');
     }
 
-    static function redirectLogin($message = null) {
+    public static function redirectLogin($message = null) {
 
         Alert::error('Gagal Login!', $message ?? '');
         return redirect()->back()->with('error', $message ?? '');
 
     }
 
-    static function redirectSuccessLogin(Request $request, $message) {
+    public static function redirectSuccessLogin(Request $request, $message) {
         Alert::success('Berhasil Login!', $message ?? '');
         $request->session()->regenerate();
-        return redirect()->intended('/')->with('success', $message ?? '');
+        return redirect()->intended('/');
     }
 }

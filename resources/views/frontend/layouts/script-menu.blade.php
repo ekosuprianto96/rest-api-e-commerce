@@ -4,6 +4,7 @@
             target = $(event.target).attr('data-target');
             toggleMenuMobile('menuMobile', target);
             toggleDropKategori('dropDownKategori', target);
+            return;
         })
 
         $('#dropDownKategori').mouseleave(toggleDropKategori)
@@ -25,7 +26,6 @@
                 // Jika tidak diperluas, ambil tinggi kontennya dan animasikan ke tinggi tersebut
                 dropDownKategori.css('height', 'auto');
                 var contentHeight = dropDownKategori.outerHeight() + "px";
-                console.log(contentHeight)
                 dropDownKategori.show();
                 dropDownKategori.css('height', 0).animate({height: contentHeight}, 300, function() {
                     dropDownKategori.addClass('active');

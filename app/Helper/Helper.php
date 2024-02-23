@@ -15,6 +15,14 @@ if (!function_exists('getSettings')) {
     return $settings->{$key};
   }
 }
+if (!function_exists('path_produk')) {
+  function path_file_produk($key = 'file', $filename = null)
+  {
+    if(isset($fileName)) return 'assets/produk/'.$key.'/'.$fileName;
+
+    return 'assets/produk/'.$key;
+  }
+}
 if (!function_exists('statusWishlist')) {
   function statusWishlist(Produk $produk)
   {
@@ -104,5 +112,11 @@ if (!function_exists('isCheckVar')) {
     if(isset($key)) return $data[$key];
 
     return $data;
+  }
+}
+if (!function_exists('renderScript')) {
+  function renderScript($fileName)
+  {
+    return view("frontend.layouts.scripts.{$fileName}")->render();
   }
 }

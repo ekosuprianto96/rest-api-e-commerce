@@ -31,7 +31,7 @@
                 }
             });
         @endif
-
+        
         @if (Session::has('alert.config'))
             Swal.fire({!! Session::pull('alert.config') !!});
         @endif

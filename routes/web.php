@@ -38,7 +38,11 @@ use App\Http\Controllers\Frontend\Cart\CartController;
 use App\Http\Controllers\Frontend\Dashboard\DashboardController as UserDashboardController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\Linggapay\LinggapayController;
+use App\Http\Controllers\Frontend\Payment\PaymentController as FrontendPaymentController;
 use App\Http\Controllers\Frontend\Produk\ProdukController as FrontendProdukController;
+use App\Http\Controllers\Frontend\Toko\DashboardTokoController;
+use App\Http\Controllers\Frontend\TransaksiController as FrontendTransaksiController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -71,14 +75,52 @@ Route::middleware(['auth'])->group(function () {
     Route::get('{username}/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
     Route::get('{username}/keranjang', [UserDashboardController::class, 'keranjang'])->name('keranjang');
     Route::get('{username}/wishlist', [UserDashboardController::class, 'wishlist'])->name('wishlist');
+    Route::get('{username}/transaksi', [UserDashboardController::class, 'transaksi'])->name('transaksi');
+    Route::get('{username}/linggaPay', [UserDashboardController::class, 'linggaPay'])->name('linggaPay');
+    Route::get('{username}/affiliasi', [UserDashboardController::class, 'komisiAffiliasi'])->name('affiliasi');
+    Route::get('{username}/pesanan', [UserDashboardController::class, 'pesanan'])->name('pesanan');
+    Route::get('{username}/profile', [UserDashboardController::class, 'profile'])->name('profile');
+    Route::put('profile/update', [UserDashboardController::class, 'profileUpdate'])->name('profile.update');
+    Route::post('profile/upload-image', [UserDashboardController::class, 'uploadImageProfile'])->name('profile.upload-image');
+    Route::post('cart/destroy', [UserDashboardController::class, 'destroyCart'])->name('cart.dsstroy');
 
     // Route Linggapay
-    Route::get('linggapay', [LinggapayController::class, 'index'])->name('linggapay');
+    
 
     // Route Cart
     Route::prefix('keranjang/')->name('keranjang.')->group(function() {
       Route::post('store', [CartController::class, 'store'])->name('store');
+      Route::post('checkout', [CartController::class, 'checkout'])->name('checkout');
     });
+
+    // Route Transaksi
+    Route::prefix('transkasi/')->name('transaksi.')->group(function() {
+      
+    });
+    
+    // Route Payment 
+    Route::prefix('payment/')->name('payment.')->group(function() {
+      Route::post('render', [FrontendPaymentController::class, 'render'])->name('render');
+    });
+
+  });
+  
+  // Route Toko
+  Route::name('toko.')->prefix('toko/')->middleware(['permission:akses-permission-for-toko', 'refresh-session'])->group(function() {
+    Route::get('', [DashboardTokoController::class, 'index'])->name('dashboard');
+    Route::get('daftar-order', [DashboardTokoController::class, 'daftarOrder'])->name('daftar-order');
+    Route::get('order/detail', [DashboardTokoController::class, 'detailOrder'])->name('order.detail');
+    Route::put('order/{noorder}/proses', [DashboardTokoController::class, 'updateProsesOrder'])->name('order.proses');
+    Route::get('daftar-produk', [DashboardTokoController::class, 'daftarProduk'])->name('daftar-produk');
+    Route::get('upload-produk', [DashboardTokoController::class, 'uploadProduk'])->name('upload-produk')->withoutMiddleware('refresh-session');
+    Route::post('produk/store', [DashboardTokoController::class, 'storeProduk'])->name('produk.store')->withoutMiddleware('refresh-session');
+    Route::post('produk/store-image', [DashboardTokoController::class, 'storeImage'])->name('produk.store-image')->withoutMiddleware('refresh-session');
+    Route::post('produk/destroy', [DashboardTokoController::class, 'destroyProduk'])->name('produk.destroy');
+    Route::get('produk/{kodeproduk}/edit', [DashboardTokoController::class, 'editProduk'])->name('produk.edit')->withoutMiddleware('refresh-session');
+    Route::post('produk/{kodeproduk}/update', [DashboardTokoController::class, 'updateProduk'])->name('produk.update')->withoutMiddleware('refresh-session');
+    Route::get('settings', [DashboardTokoController::class, 'settingsToko'])->name('settings');
+    Route::put('settings/{kodetoko}/update', [DashboardTokoController::class, 'updateSettingsToko'])->name('settings.update');
+    Route::post('settings/upload-image', [DashboardTokoController::class, 'uploadImageProfileToko'])->name('settings.upload-image');
   });
 });
 
